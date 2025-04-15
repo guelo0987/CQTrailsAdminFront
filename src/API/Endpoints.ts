@@ -32,6 +32,10 @@ export const endpoints = {
         list: 'vehiculos',
         porId: (id: number) => `vehiculos/${id}`,
         typeCount: 'vehiculos/tipos/count',
+        crear: 'vehiculos',
+        actualizar: (id: number) => `vehiculos/${id}`,
+        eliminar: (id: number) => `vehiculos/${id}`,
+        updateDisponibilidad: (id: number) => `vehiculos/${id}/disponibilidad`
     },
 
     reservations:{

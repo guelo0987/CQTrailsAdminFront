@@ -15,6 +15,8 @@ import TuneIcon from "@mui/icons-material/Tune"
 import AirlineSeatReclineNormalIcon from "@mui/icons-material/AirlineSeatReclineNormal"
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday"
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney"
+import { vehicleService } from "../Services/VehicleService.ts"
+import { notificationService } from "../Utils/notificationService.ts"
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([])
@@ -39,164 +41,76 @@ const VehicleManagement = () => {
   const yearOptions = ["all", ...Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString())]
   const capacityOptions = ["all", "2", "4", "5", "7", "8+"]
 
-  // Datos de ejemplo
+  // Cargar vehículos desde la API
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockVehicles = [
-        {
-          id: 1,
-          placa: "ABC123",
-          modelo: "Toyota Corolla",
-          anio: 2020,
-          tipo: "Sedán",
-          capacidad: 5,
-          precio: 25000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 2,
-          placa: "XYZ789",
-          modelo: "Honda Civic",
-          anio: 2021,
-          tipo: "Sedán",
-          capacidad: 5,
-          precio: 28000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 3,
-          placa: "DEF456",
-          modelo: "Nissan Rogue",
-          anio: 2019,
-          tipo: "SUV",
-          capacidad: 7,
-          precio: 32000,
-          activo: false,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 4,
-          placa: "GHI789",
-          modelo: "Ford Explorer",
-          anio: 2022,
-          tipo: "SUV",
-          capacidad: 7,
-          precio: 45000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 5,
-          placa: "JKL012",
-          modelo: "Chevrolet Spark",
-          anio: 2018,
-          tipo: "Hatchback",
-          capacidad: 4,
-          precio: 15000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 6,
-          placa: "MNO345",
-          modelo: "Toyota Hilux",
-          anio: 2021,
-          tipo: "Pickup",
-          capacidad: 5,
-          precio: 38000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 7,
-          placa: "PQR678",
-          modelo: "Honda Odyssey",
-          anio: 2020,
-          tipo: "Minivan",
-          capacidad: 8,
-          precio: 42000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-        {
-          id: 8,
-          placa: "STU901",
-          modelo: "Mazda MX-5",
-          anio: 2022,
-          tipo: "Deportivo",
-          capacidad: 2,
-          precio: 35000,
-          activo: true,
-          imagenes: [
-            { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
-            { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
-          ],
-        },
-      ]
-      setVehicles(mockVehicles)
-      setLoading(false)
-    }, 1000)
+    const fetchVehicles = async () => {
+      try {
+        setLoading(true)
+        const response = await vehicleService.getVehicles()
+        
+        if (response.success && response.data) {
+          // Transformar datos para que coincidan con el formato esperado
+          const formattedVehicles = response.data.map(vehicle => ({
+            id: vehicle.IdVehiculo,
+            placa: vehicle.Placa,
+            modelo: vehicle.Modelo,
+            anio: vehicle.Ano,
+            tipo: vehicle.TipoVehiculo || "Otro",
+            capacidad: vehicle.Capacidad,
+            precio: vehicle.Price || 0,
+            activo: vehicle.Disponible !== undefined ? vehicle.Disponible : true,
+            imagenes: vehicle.Image_url ? [
+              { tipo: "general", url: vehicle.Image_url.image1 || "/placeholder.svg?height=200&width=300" },
+              { tipo: "interior", url: vehicle.Image_url.image2 || "/placeholder.svg?height=200&width=300" },
+              { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
+            ] : [
+              { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
+              { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
+              { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
+            ],
+          }))
+          setVehicles(formattedVehicles)
+        } else {
+          notificationService.showError("Error al cargar los vehículos")
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching vehicles:", error)
+        notificationService.showError("Error al cargar los vehículos")
+        setLoading(false)
+      }
+    }
+
+    fetchVehicles()
   }, [])
 
   // Filtrar vehículos por búsqueda y filtros adicionales
   const filteredVehicles = vehicles.filter((vehicle) => {
     // Filtro por término de búsqueda
     const searchMatch =
-      vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+      (vehicle.placa && vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (vehicle.tipo && vehicle.tipo.toLowerCase().includes(searchTerm.toLowerCase()))
 
     // Filtro por tipo de vehículo
-    const typeMatch = typeFilter === "all" || vehicle.tipo === typeFilter
+    const typeMatch = typeFilter === "all" || (vehicle.tipo && vehicle.tipo === typeFilter)
 
     // Filtro por año
-    const yearMatch = yearFilter === "all" || vehicle.anio.toString() === yearFilter
+    const yearMatch = yearFilter === "all" || (vehicle.anio && vehicle.anio.toString() === yearFilter)
 
     // Filtro por capacidad
     let capacityMatch = true
     if (capacityFilter !== "all") {
       if (capacityFilter === "8+") {
-        capacityMatch = vehicle.capacidad >= 8
+        capacityMatch = vehicle.capacidad && vehicle.capacidad >= 8
       } else {
-        capacityMatch = vehicle.capacidad === Number.parseInt(capacityFilter, 10)
+        capacityMatch = vehicle.capacidad && vehicle.capacidad === Number.parseInt(capacityFilter, 10)
       }
     }
 
     // Filtro por rango de precio
-    const minPriceMatch = !minPriceFilter || vehicle.precio >= Number.parseInt(minPriceFilter, 10)
-    const maxPriceMatch = !maxPriceFilter || vehicle.precio <= Number.parseInt(maxPriceFilter, 10)
+    const minPriceMatch = !minPriceFilter || (vehicle.precio && vehicle.precio >= Number.parseInt(minPriceFilter, 10))
+    const maxPriceMatch = !maxPriceFilter || (vehicle.precio && vehicle.precio <= Number.parseInt(maxPriceFilter, 10))
 
     return searchMatch && typeMatch && yearMatch && capacityMatch && minPriceMatch && maxPriceMatch
   })
@@ -228,41 +142,132 @@ const VehicleManagement = () => {
     setShowDeleteModal(true)
   }
 
-  const handleToggleActive = (vehicle) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedVehicles = vehicles.map((v) => {
-      if (v.id === vehicle.id) {
-        return { ...v, activo: !v.activo }
-      }
-      return v
-    })
-    setVehicles(updatedVehicles)
-  }
-
-  const handleSaveVehicle = (vehicleData) => {
-    if (currentVehicle) {
-      // Actualizar vehículo existente
-      const updatedVehicles = vehicles.map((vehicle) =>
-        vehicle.id === currentVehicle.id ? { ...vehicle, ...vehicleData } : vehicle,
-      )
+  const handleToggleActive = async (vehicle) => {
+    try {
+      setLoading(true)
+      
+      // Llamar a la API para actualizar la disponibilidad
+      await vehicleService.updateVehicleAvailability(vehicle.id, !vehicle.activo)
+      
+      // Actualizar el estado local
+      const updatedVehicles = vehicles.map((v) => {
+        if (v.id === vehicle.id) {
+          return { ...v, activo: !v.activo }
+        }
+        return v
+      })
+      
       setVehicles(updatedVehicles)
-    } else {
-      // Crear nuevo vehículo
-      const newVehicle = {
-        id: vehicles.length + 1,
-        ...vehicleData,
-        activo: true,
-      }
-      setVehicles([...vehicles, newVehicle])
+      setLoading(false)
+    } catch (error) {
+      console.error("Error updating vehicle availability:", error)
+      notificationService.showError("Error al actualizar la disponibilidad del vehículo")
+      setLoading(false)
     }
-    setShowVehicleModal(false)
   }
 
-  const handleConfirmDelete = () => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedVehicles = vehicles.filter((vehicle) => vehicle.id !== currentVehicle.id)
-    setVehicles(updatedVehicles)
-    setShowDeleteModal(false)
+  const handleSaveVehicle = async (vehicleData) => {
+    try {
+      setLoading(true);
+      
+      // Extract image files from the form data
+      const imageFiles = vehicleData.imagenes
+        .filter(img => img.file)
+        .map(img => img.file);
+      
+      // Prepare vehicle data for the API using the correct field names
+      const apiVehicleData = {
+        Placa: vehicleData.placa,
+        Modelo: vehicleData.modelo,
+        Ano: vehicleData.anio,
+        TipoVehiculo: vehicleData.tipo,
+        Capacidad: vehicleData.capacidad,
+        Price: vehicleData.precio,
+        Disponible: true
+      };
+      
+      let response;
+      
+      if (currentVehicle) {
+        // Update existing vehicle
+        response = await vehicleService.updateVehicle(currentVehicle.id, apiVehicleData, imageFiles);
+        
+        // Update local state with the response data
+        if (response.success && response.data) {
+          // Actualizar estado local
+          const updatedVehicles = vehicles.map((vehicle) =>
+            vehicle.id === currentVehicle.id 
+              ? { 
+                  ...vehicle, 
+                  placa: response.data.Placa,
+                  modelo: response.data.Modelo,
+                  anio: response.data.Ano,
+                  tipo: response.data.TipoVehiculo,
+                  capacidad: response.data.Capacidad,
+                  precio: response.data.Price
+                } 
+              : vehicle
+          )
+          
+          setVehicles(updatedVehicles)
+        }
+      } else {
+        // Create new vehicle
+        response = await vehicleService.createVehicle(apiVehicleData, imageFiles);
+        
+        // Update local state with the response data
+        if (response.success && response.data) {
+          const newVehicle = {
+            id: response.data.IdVehiculo,
+            placa: response.data.Placa,
+            modelo: response.data.Modelo,
+            anio: response.data.Ano,
+            tipo: response.data.TipoVehiculo || "Otro",
+            capacidad: response.data.Capacidad,
+            precio: response.data.Price || 0,
+            activo: response.data.Disponible !== undefined ? response.data.Disponible : true,
+            imagenes: response.data.Image_url ? [
+              { tipo: "general", url: response.data.Image_url.image1 || "/placeholder.svg?height=200&width=300" },
+              { tipo: "interior", url: response.data.Image_url.image2 || "/placeholder.svg?height=200&width=300" },
+              { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
+            ] : [
+              { tipo: "general", url: "/placeholder.svg?height=200&width=300" },
+              { tipo: "interior", url: "/placeholder.svg?height=200&width=300" },
+              { tipo: "lateral", url: "/placeholder.svg?height=200&width=300" },
+            ],
+          }
+          
+          setVehicles([...vehicles, newVehicle])
+        }
+      }
+      
+      setShowVehicleModal(false);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error saving vehicle:", error);
+      notificationService.showError("Error al guardar el vehículo");
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true)
+      
+      // Llamar a la API para eliminar el vehículo
+      await vehicleService.deleteVehicle(currentVehicle.id)
+      
+      // Actualizar estado local
+      const updatedVehicles = vehicles.filter((vehicle) => vehicle.id !== currentVehicle.id)
+      setVehicles(updatedVehicles)
+      
+      setShowDeleteModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error deleting vehicle:", error)
+      notificationService.showError("Error al eliminar el vehículo")
+      setLoading(false)
+    }
   }
 
   const handleResetFilters = () => {
@@ -273,6 +278,7 @@ const VehicleManagement = () => {
     setMaxPriceFilter("")
   }
 
+  // Resto del componente sin cambios
   return (
     <div className="vehicle-management">
       <div className="user-actions">
