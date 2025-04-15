@@ -298,7 +298,7 @@ const Dashboard = () => {
             (user) => user.IdUsuario === reservation.IdUsuario
           )
 
-          console.log(reservation)
+          
           
           return {
             id: reservation.IdReservacion,

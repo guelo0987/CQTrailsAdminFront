@@ -10,6 +10,8 @@ import DeleteIcon from "@mui/icons-material/Delete"
 import BlockIcon from "@mui/icons-material/Block"
 import CheckCircleIcon from "@mui/icons-material/CheckCircle"
 import LocationCityIcon from "@mui/icons-material/LocationCity"
+import { cityService } from "../Services/CityService.ts"
+import { notificationService } from "../Utils/notificationService.ts"
 
 const CityManagement = () => {
   const [cities, setCities] = useState([])
@@ -22,61 +24,39 @@ const CityManagement = () => {
   const [citiesPerPage] = useState(10)
   const [statusFilter, setStatusFilter] = useState("all")
 
-  // Datos de ejemplo
+  // Fetch cities from API
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockCities = [
-        {
-          IdCiudad: 1,
-          Nombre: "Santiago",
-          Estado: "Activo",
-        },
-        {
-          IdCiudad: 2,
-          Nombre: "Valparaíso",
-          Estado: "Activo",
-        },
-        {
-          IdCiudad: 3,
-          Nombre: "Concepción",
-          Estado: "Activo",
-        },
-        {
-          IdCiudad: 4,
-          Nombre: "La Serena",
-          Estado: "Inactivo",
-        },
-        {
-          IdCiudad: 5,
-          Nombre: "Antofagasta",
-          Estado: "Activo",
-        },
-        {
-          IdCiudad: 6,
-          Nombre: "Temuco",
-          Estado: "Activo",
-        },
-        {
-          IdCiudad: 7,
-          Nombre: "Puerto Montt",
-          Estado: "Inactivo",
-        },
-        {
-          IdCiudad: 8,
-          Nombre: "Arica",
-          Estado: "Activo",
-        },
-      ]
-      setCities(mockCities)
-      setLoading(false)
-    }, 1000)
+    const fetchCities = async () => {
+      try {
+        setLoading(true)
+        const response = await cityService.getCities()
+        
+        if (response.success && response.data) {
+          // Transform data to match the expected format if needed
+          const formattedCities = response.data.map(city => ({
+            IdCiudad: city.IdCiudad,
+            Nombre: city.Nombre,
+            Estado: city.Estado || "Activo"
+          }))
+          setCities(formattedCities)
+        } else {
+          notificationService.showError("Error al cargar las ciudades")
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching cities:", error)
+        notificationService.showError("Error al cargar las ciudades")
+        setLoading(false)
+      }
+    }
+
+    fetchCities()
   }, [])
 
   // Filtrar ciudades por búsqueda y estado
   const filteredCities = cities.filter((city) => {
-    const searchMatch = city.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
-    const statusMatch = statusFilter === "all" || city.Estado.toLowerCase() === statusFilter.toLowerCase()
+    const searchMatch = city.Nombre && city.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    const statusMatch = statusFilter === "all" || (city.Estado && city.Estado.toLowerCase() === statusFilter.toLowerCase())
     return searchMatch && statusMatch
   })
 
@@ -107,41 +87,103 @@ const CityManagement = () => {
     setShowDeleteModal(true)
   }
 
-  const handleToggleActive = (city) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedCities = cities.map((c) => {
-      if (c.IdCiudad === city.IdCiudad) {
-        return { ...c, Estado: c.Estado === "Activo" ? "Inactivo" : "Activo" }
+  const handleToggleActive = async (city) => {
+    try {
+      setLoading(true)
+      
+      // Prepare city data for update
+      const cityData = {
+        nombre: city.Nombre,
+        estado: city.Estado === "Activo" ? "Inactivo" : "Activo"
       }
-      return c
-    })
-    setCities(updatedCities)
-  }
-
-  const handleSaveCity = (cityData) => {
-    if (currentCity) {
-      // Actualizar ciudad existente
-      const updatedCities = cities.map((city) =>
-        city.IdCiudad === currentCity.IdCiudad ? { ...city, ...cityData } : city,
-      )
+      
+      // Call API to update city
+      await cityService.updateCity(city.IdCiudad, cityData)
+      
+      // Update local state
+      const updatedCities = cities.map((c) => {
+        if (c.IdCiudad === city.IdCiudad) {
+          return { ...c, Estado: c.Estado === "Activo" ? "Inactivo" : "Activo" }
+        }
+        return c
+      })
+      
       setCities(updatedCities)
-    } else {
-      // Crear nueva ciudad
-      const newCity = {
-        IdCiudad: cities.length + 1,
-        ...cityData,
-        Estado: "Activo",
-      }
-      setCities([...cities, newCity])
+      setLoading(false)
+    } catch (error) {
+      console.error("Error updating city status:", error)
+      notificationService.showError("Error al actualizar el estado de la ciudad")
+      setLoading(false)
     }
-    setShowCityModal(false)
   }
 
-  const handleConfirmDelete = () => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedCities = cities.filter((city) => city.IdCiudad !== currentCity.IdCiudad)
-    setCities(updatedCities)
-    setShowDeleteModal(false)
+  const handleSaveCity = async (cityData) => {
+    try {
+      setLoading(true)
+      
+      // Prepare city data for API
+      const apiCityData = {
+        nombre: cityData.Nombre,
+        estado: cityData.Estado || "Activo"
+      }
+      
+      if (currentCity) {
+        // Update existing city
+        await cityService.updateCity(currentCity.IdCiudad, apiCityData)
+        
+        // Update local state
+        const updatedCities = cities.map((city) =>
+          city.IdCiudad === currentCity.IdCiudad 
+            ? { 
+                ...city, 
+                Nombre: cityData.Nombre,
+                Estado: cityData.Estado
+              } 
+            : city
+        )
+        
+        setCities(updatedCities)
+      } else {
+        // Create new city
+        const response = await cityService.createCity(apiCityData)
+        
+        if (response.success && response.data) {
+          const newCity = {
+            IdCiudad: response.data.idCiudad,
+            Nombre: response.data.nombre,
+            Estado: response.data.estado || "Activo"
+          }
+          
+          setCities([...cities, newCity])
+        }
+      }
+      
+      setShowCityModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error saving city:", error)
+      setLoading(false)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true)
+      
+      // Call API to delete city
+      await cityService.deleteCity(currentCity.IdCiudad)
+      
+      // Update local state
+      const updatedCities = cities.filter((city) => city.IdCiudad !== currentCity.IdCiudad)
+      setCities(updatedCities)
+      
+      setShowDeleteModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error deleting city:", error)
+      notificationService.showError("Error al eliminar la ciudad")
+      setLoading(false)
+    }
   }
 
   return (

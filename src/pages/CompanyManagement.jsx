@@ -10,6 +10,8 @@ import DeleteIcon from "@mui/icons-material/Delete"
 import BlockIcon from "@mui/icons-material/Block"
 import CheckCircleIcon from "@mui/icons-material/CheckCircle"
 import BusinessIcon from "@mui/icons-material/Business"
+import { companyService } from "../Services/CompanyService.ts"
+import { notificationService } from "../Utils/notificationService.ts"
 
 const CompanyManagement = () => {
   const [companies, setCompanies] = useState([])
@@ -21,50 +23,35 @@ const CompanyManagement = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [companiesPerPage] = useState(10)
 
-  // Datos de ejemplo
+  // Fetch companies from API
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockCompanies = [
-        {
-          id: 1,
-          Nombre: "Transportes Rápidos S.A.",
-          ContactoEmail: "contacto@transportesrapidos.com",
-          ContactoTelefono: "+56 9 1234 5678",
-          Activo: true,
-        },
-        {
-          id: 2,
-          Nombre: "Viajes Seguros Ltda.",
-          ContactoEmail: "info@viajesseguros.cl",
-          ContactoTelefono: "+56 9 8765 4321",
-          Activo: true,
-        },
-        {
-          id: 3,
-          Nombre: "Movilidad Urbana SpA",
-          ContactoEmail: "contacto@movilidadurbana.com",
-          ContactoTelefono: "+56 9 5555 6666",
-          Activo: true,
-        },
-        {
-          id: 4,
-          Nombre: "Transporte Ejecutivo Premium",
-          ContactoEmail: "reservas@ejecutivopremium.cl",
-          ContactoTelefono: "+56 9 7777 8888",
-          Activo: false,
-        },
-        {
-          id: 5,
-          Nombre: "Rutas del Sur",
-          ContactoEmail: "info@rutasdelsur.cl",
-          ContactoTelefono: "+56 9 3333 4444",
-          Activo: true,
-        },
-      ]
-      setCompanies(mockCompanies)
-      setLoading(false)
-    }, 1000)
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true)
+        const response = await companyService.getCompanies()
+        
+        if (response.success && response.data) {
+          // Transform data to match the expected format if needed
+          const formattedCompanies = response.data.map(company => ({
+            id: company.IdEmpresa,
+            Nombre: company.Nombre,
+            ContactoEmail: company.ContactoEmail,
+            ContactoTelefono: company.ContactoTelefono,
+            Activo: company.Activo
+          }))
+          setCompanies(formattedCompanies)
+        } else {
+          notificationService.showError("Error al cargar las empresas")
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching companies:", error)
+        notificationService.showError("Error al cargar las empresas")
+        setLoading(false)
+      }
+    }
+
+    fetchCompanies()
   }, [])
 
   // Filtrar empresas por búsqueda
@@ -87,10 +74,7 @@ const CompanyManagement = () => {
     // La búsqueda ya se aplica automáticamente con el estado searchTerm
   }
 
-  const handleAddCompany = () => {
-    setCurrentCompany(null)
-    setShowCompanyModal(true)
-  }
+  // Removing handleAddCompany function since we don't need it anymore
 
   const handleEditCompany = (company) => {
     setCurrentCompany(company)
@@ -102,41 +86,111 @@ const CompanyManagement = () => {
     setShowDeleteModal(true)
   }
 
-  const handleToggleActive = (company) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedCompanies = companies.map((c) => {
-      if (c.id === company.id) {
-        return { ...c, Activo: !c.Activo }
+  const handleToggleActive = async (company) => {
+    try {
+      setLoading(true)
+      
+      // Prepare company data for update
+      const companyData = {
+        nombre: company.Nombre,
+        email: company.ContactoEmail,
+        telefono: company.ContactoTelefono,
+        activo: !company.Activo
       }
-      return c
-    })
-    setCompanies(updatedCompanies)
-  }
-
-  const handleSaveCompany = (companyData) => {
-    if (currentCompany) {
-      // Actualizar empresa existente
-      const updatedCompanies = companies.map((company) =>
-        company.id === currentCompany.id ? { ...company, ...companyData } : company,
-      )
+      
+      // Call API to update company
+      await companyService.updateCompany(company.id, companyData)
+      
+      // Update local state
+      const updatedCompanies = companies.map((c) => {
+        if (c.id === company.id) {
+          return { ...c, Activo: !c.Activo }
+        }
+        return c
+      })
+      
       setCompanies(updatedCompanies)
-    } else {
-      // Crear nueva empresa
-      const newCompany = {
-        id: companies.length + 1,
-        ...companyData,
-        Activo: true,
-      }
-      setCompanies([...companies, newCompany])
+      setLoading(false)
+    } catch (error) {
+      console.error("Error updating company status:", error)
+      notificationService.showError("Error al actualizar el estado de la empresa")
+      setLoading(false)
     }
-    setShowCompanyModal(false)
   }
 
-  const handleConfirmDelete = () => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedCompanies = companies.filter((company) => company.id !== currentCompany.id)
-    setCompanies(updatedCompanies)
-    setShowDeleteModal(false)
+  const handleSaveCompany = async (companyData) => {
+    try {
+      setLoading(true)
+      
+      // Prepare company data for API
+      const apiCompanyData = {
+        nombre: companyData.Nombre,
+        email: companyData.ContactoEmail,
+        telefono: companyData.ContactoTelefono,
+        direccion: companyData.Direccion || "",
+        activo: true
+      }
+      
+      if (currentCompany) {
+        // Update existing company
+        await companyService.updateCompany(currentCompany.id, apiCompanyData)
+        
+        // Update local state
+        const updatedCompanies = companies.map((company) =>
+          company.id === currentCompany.id 
+            ? { 
+                ...company, 
+                Nombre: companyData.Nombre,
+                ContactoEmail: companyData.ContactoEmail,
+                ContactoTelefono: companyData.ContactoTelefono
+              } 
+            : company
+        )
+        
+        setCompanies(updatedCompanies)
+      } else {
+        // Create new company
+        const response = await companyService.createCompany(apiCompanyData)
+        
+        if (response.success && response.data) {
+          const newCompany = {
+            id: response.data.IdEmpresa,
+            Nombre: response.data.Nombre,
+            ContactoEmail: response.data.Email,
+            ContactoTelefono: response.data.Telefono,
+            Activo: response.data.Activo || true
+          }
+          
+          setCompanies([...companies, newCompany])
+        }
+      }
+      
+      setShowCompanyModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error saving company:", error)
+      setLoading(false)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true)
+      
+      // Call API to delete company
+      await companyService.deleteCompany(currentCompany.id)
+      
+      // Update local state
+      const updatedCompanies = companies.filter((company) => company.id !== currentCompany.id)
+      setCompanies(updatedCompanies)
+      
+      setShowDeleteModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error deleting company:", error)
+      notificationService.showError("Error al eliminar la empresa")
+      setLoading(false)
+    }
   }
 
   return (
@@ -155,10 +209,7 @@ const CompanyManagement = () => {
             Buscar
           </button>
         </form>
-        <button className="add-button" onClick={handleAddCompany}>
-          <AddIcon fontSize="small" />
-          Nueva Empresa
-        </button>
+        {/* Removing the "Nueva Empresa" button */}
       </div>
 
       {loading ? (

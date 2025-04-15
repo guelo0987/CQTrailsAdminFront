@@ -10,6 +10,17 @@ export const endpoints = {
     empresa:{
         list: 'empresas',
        porId: (id: number) => `empresas/${id}`,
+       crear: 'empresas',
+       actualizar: (id: number) => `empresas/${id}`,
+       eliminar: (id: number) => `empresas/${id}`
+    },
+
+    ciudades:{
+        list: 'ciudades',
+        porId: (id: number) => `ciudades/${id}`,
+        crear: 'ciudades',
+        actualizar: (id: number) => `ciudades/${id}`,
+        eliminar: (id: number) => `ciudades/${id}`
     },
 
     users:{

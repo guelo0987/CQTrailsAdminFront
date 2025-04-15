@@ -18,7 +18,7 @@ class CompanyService {
         this.baseURL = API_BASE_URL;
     }
 
-    /**
+    /** 
      * Get all companies
      * @returns Promise with companies list
      */
@@ -54,7 +54,7 @@ class CompanyService {
      */
     async createCompany(company: Company) {
         try {
-            const response = await axiosInstance.post(`${this.baseURL}${endpoints.empresa.list}`, company);
+            const response = await axiosInstance.post(`${this.baseURL}${endpoints.empresa.crear}`, company);
             notificationService.showSuccess('Empresa creada exitosamente');
             return response.data;
         } catch (error) {
@@ -103,4 +103,5 @@ class CompanyService {
     }
 }
 
+// Add this at the end of the file
 export const companyService = new CompanyService();
