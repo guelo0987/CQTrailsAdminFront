@@ -12,6 +12,10 @@ import {
   Person,
   Business,
 } from "@mui/icons-material"
+import { userService } from "../Services/UserService.ts"
+import { companyService } from "../Services/CompanyService.ts"
+import { vehicleService } from "../Services/VehicleService.ts"
+import { reservationService } from "../Services/ReservationService.ts"
 
 // Componente para las tarjetas de estadísticas
 const StatCard = ({ icon, title, value, color, bgColor }) => (
@@ -124,8 +128,8 @@ const PieChart = ({ data }) => {
 const Dashboard = () => {
   // Estado para los datos simulados
   const [weeklyData, setWeeklyData] = useState({
-    labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-    values: [8, 12, 15, 10, 20, 25, 18],
+    labels: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+    values: [0, 0, 0, 0, 0, 0, 0],
   })
 
   const [vehicleDistribution, setVehicleDistribution] = useState([
@@ -135,74 +139,195 @@ const Dashboard = () => {
     { label: "Minibús", value: 4, color: "#8bc34a" },
   ])
 
+  // Move all state declarations to the top level of the component
   const [recentReservations, setRecentReservations] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // State for counters
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [registeredCompanies, setRegisteredCompanies] = useState(0)
+  const [availableVehicles, setAvailableVehicles] = useState(0)
+  const [activeReservations, setActiveReservations] = useState(0)
+  
+  // New state for dashboard statistics
+  const [weeklyGrowth, setWeeklyGrowth] = useState({
+    percentage: 0,
+    formattedPercentage: "0%",
+    message: "",
+    currentWeekCount: 0,
+    previousWeekCount: 0
+  })
+  const [mostReservedVehicle, setMostReservedVehicle] = useState({
+    model: "No data",
+    plate: "",
+    type: "",
+    totalReservations: 0
+  })
+  const [popularDestination, setPopularDestination] = useState("No data")
+  const [totalReservations, setTotalReservations] = useState(0)
 
-  // Simular carga de datos
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Cargar datos reales desde la API
+  // Update the useEffect function to fetch vehicle type data
+  
   useEffect(() => {
-    setTimeout(() => {
-      const mockReservations = [
-        {
-          id: "RES-2023-001",
-          cliente: "Juan Pérez",
-          origen: "Aeropuerto Internacional",
-          destino: "Hotel Costa Verde",
-          fecha: "09/04/2025",
-          hora: "14:30",
-          estado: "Confirmada",
-          vehiculo: "Sedan - Toyota Corolla",
-          empresa: "Transportes Rápidos S.A.",
-        },
-        {
-          id: "RES-2023-002",
-          cliente: "María González",
-          origen: "Hotel Las Palmas",
-          destino: "Centro Comercial Plaza",
-          fecha: "09/04/2025",
-          hora: "15:45",
-          estado: "En Proceso",
-          vehiculo: "SUV - Honda CR-V",
-          empresa: "Viajes Seguros Ltda.",
-        },
-        {
-          id: "RES-2023-003",
-          cliente: "Carlos Rodríguez",
-          origen: "Centro de Convenciones",
-          destino: "Aeropuerto Internacional",
-          fecha: "10/04/2025",
-          hora: "08:15",
-          estado: "Pendiente",
-          vehiculo: "Van - Hyundai H1",
-          empresa: "Movilidad Urbana SpA",
-        },
-        {
-          id: "RES-2023-004",
-          cliente: "Ana Martínez",
-          origen: "Residencial Los Pinos",
-          destino: "Universidad Central",
-          fecha: "10/04/2025",
-          hora: "09:30",
-          estado: "Confirmada",
-          vehiculo: "Sedan - Nissan Versa",
-          empresa: "Transportes Rápidos S.A.",
-        },
-        {
-          id: "RES-2023-005",
-          cliente: "Roberto Sánchez",
-          origen: "Plaza Principal",
-          destino: "Estadio Municipal",
-          fecha: "11/04/2025",
-          hora: "16:00",
-          estado: "Pendiente",
-          vehiculo: "Minibús - Mercedes Sprinter",
-          empresa: "Rutas del Sur",
-        },
-      ]
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch dashboard statistics
+        const dashboardStatsResponse = await reservationService.getDashboardStats()
+        
+        const dashboardStats = dashboardStatsResponse.data || {}
+        
+        // Update weekly growth data
+        if (dashboardStats.crecimiento_semanal) {
+          setWeeklyGrowth({
+            percentage: dashboardStats.crecimiento_semanal.porcentaje,
+            formattedPercentage: dashboardStats.crecimiento_semanal.porcentaje_formateado,
+            message: dashboardStats.crecimiento_semanal.mensaje,
+            currentWeekCount: dashboardStats.crecimiento_semanal.current_week_count,
+            previousWeekCount: dashboardStats.crecimiento_semanal.previous_week_count
+          })
+        }
+        
+        // Fetch weekly reservations data
+        const weeklyReservationsResponse = await reservationService.getWeeklyReservations()
+        
+        if (weeklyReservationsResponse.success && weeklyReservationsResponse.data) {
+          const weeklyReservationsData = weeklyReservationsResponse.data
+          
+          // Extract day names and reservation counts
+          const labels = weeklyReservationsData.dias.map(day => {
+            // Shorten day names to 3 letters
+            const shortDayName = day.dia.substring(0, 3)
+            return shortDayName
+          })
+          
+          const values = weeklyReservationsData.dias.map(day => day.total_reservaciones)
+          
+          // Update weekly data state
+          setWeeklyData({
+            labels,
+            values
+          })
+        }
+        
+        // Fetch vehicle type count data
+        const vehicleTypeCountResponse = await vehicleService.getVehicleTypeCount()
+        
+        if (vehicleTypeCountResponse.success && vehicleTypeCountResponse.data) {
+          const vehicleTypeData = vehicleTypeCountResponse.data
+          
+          // Transform the data for the pie chart
+          const colors = ["#008f39", "#00bf4c", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107"]
+          
+          const vehicleDistributionData = Object.entries(vehicleTypeData).map(([type, count], index) => ({
+            label: type,
+            value: count,
+            color: colors[index % colors.length]
+          }))
+          
+          // Update vehicle distribution state
+          setVehicleDistribution(vehicleDistributionData)
+        }
+        
+        // Update most reserved vehicle
+        if (dashboardStats.vehiculo_mas_reservado) {
+          setMostReservedVehicle({
+            model: dashboardStats.vehiculo_mas_reservado.modelo,
+            plate: dashboardStats.vehiculo_mas_reservado.placa,
+            type: dashboardStats.vehiculo_mas_reservado.tipo_vehiculo,
+            totalReservations: dashboardStats.vehiculo_mas_reservado.total_reservas
+          })
+        }
+        
+        // Update popular destination
+        setPopularDestination(dashboardStats.destino_popular || "La Ciudad de Santo Domingo")
+        
+        // Update total reservations
+        setTotalReservations(dashboardStats.total_reservaciones || 0)
+        
+        // Fetch recent reservations (limit to 5)
+        const recentReservationsResponse = await reservationService.getReservations({
+          limit: 5,
+        })
+        
+        
+        // Extract the data array from the response
+        const recentReservations = recentReservationsResponse.data || []
+        
+        // Fetch registered users
+        const registeredUsersResponse = await userService.getUsers()
+        const registeredUsers = registeredUsersResponse.data || []
+        
+        // Fetch registered companies
+        const registeredCompaniesResponse = await companyService.getCompanies()
+        const registeredCompanies = registeredCompaniesResponse.data || []
+        
+        // Fetch vehicles
+        const vehiclesResponse = await vehicleService.getVehicles()
+        const vehicles = vehiclesResponse.data || []
+        
+        // Calculate statistics
+        setTotalUsers(registeredUsers.length)
+        setRegisteredCompanies(registeredCompanies.length)
+        setAvailableVehicles(
+          vehicles.filter((vehicle) => vehicle.Disponible === true).length
+        )
+        setActiveReservations(
+          recentReservations.filter(
+            (reservation) => reservation.Estado === "Pendiente"
+          ).length
+        )
+        
+        // Format recent reservations for display
+        const formattedReservations = recentReservations.map((reservation) => {
+          // Find the user who made the reservation
+          const user = registeredUsers.find(
+            (user) => user.IdUsuario === reservation.IdUsuario
+          )
+          
+          return {
+            id: reservation.IdReservacion,
+            date: formatDate(reservation.FechaReservacion),
+            status: reservation.Estado,
+            userName: user
+              ? `${user.Nombre} ${user.Apellido}`
+              : "Usuario Desconocido",
+            // Add placeholder data for table display
+            cliente: user ? `${user.Nombre} ${user.Apellido}` : "Usuario Desconocido",
+            origen: `${reservation.Origen}`,
+            destino: `${reservation.Destino}`,
+            fecha: formatDate(reservation.FechaInicio),
+            hora: new Date(reservation.FechaInicio).toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            estado: reservation.Estado
+          }
+        })
+        
+        setRecentReservations(formattedReservations)
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+        setLoading(false)
+      }
+    }
 
-      setRecentReservations(mockReservations)
-      setLoading(false)
-    }, 1000)
-  }, [])
+    fetchDashboardData();
+  }, []);
 
   // Función para obtener el color según el estado
   const getStatusColor = (status) => {
@@ -227,28 +352,28 @@ const Dashboard = () => {
         <StatCard
           icon={<Person style={{ color: "green" }} />}
           title="Usuarios Activos"
-          value="24"
+          value={totalUsers.toString()}
           color="#008f39"
           bgColor="rgba(0, 143, 57, 0.1)"
         />
         <StatCard
           icon={<Business style={{ color: "green" }} />}
           title="Empresas Registradas"
-          value="8"
+          value={registeredCompanies.toString()}
           color="#008f39"
           bgColor="rgba(0, 143, 57, 0.1)"
         />
         <StatCard
           icon={<DirectionsCar style={{ color: "green" }} />}
           title="Vehículos Disponibles"
-          value="42"
+          value={availableVehicles.toString()}
           color="#008f39"
           bgColor="rgba(0, 143, 57, 0.1)"
         />
         <StatCard
           icon={<CalendarToday style={{ color: "green" }} />}
-          title="Reservas Activas"
-          value="15"
+          title="Reservas Totales"
+          value={totalReservations.toString()}
           color="#008f39"
           bgColor="rgba(0, 143, 57, 0.1)"
         />
@@ -263,12 +388,14 @@ const Dashboard = () => {
           <div className="activity-cards">
             <div className="activity-card">
               <div className="activity-icon" style={{ backgroundColor: "rgba(0, 143, 57, 0.1)" }}>
-                <TrendingUp style={{ color: "#008f39" }} />
+                <TrendingUp style={{ color: weeklyGrowth.percentage >= 0 ? "#008f39" : "#dc3545" }} />
               </div>
               <div className="activity-content">
                 <h3>Crecimiento Semanal</h3>
-                <p className="activity-value">+12.5%</p>
-                <p className="activity-description">Incremento en reservas comparado con la semana anterior</p>
+                <p className="activity-value" style={{ color: weeklyGrowth.percentage >= 0 ? "#008f39" : "#dc3545" }}>
+                  {weeklyGrowth.formattedPercentage}
+                </p>
+                <p className="activity-description">{weeklyGrowth.message}</p>
               </div>
             </div>
 
@@ -278,8 +405,12 @@ const Dashboard = () => {
               </div>
               <div className="activity-content">
                 <h3>Vehículo Más Reservado</h3>
-                <p className="activity-value">Toyota Corolla</p>
-                <p className="activity-description">28 reservas en los últimos 30 días</p>
+                <p className="activity-value">{mostReservedVehicle.model}</p>
+                <p className="activity-description">
+                  {mostReservedVehicle.totalReservations > 0 
+                    ? `${mostReservedVehicle.totalReservations} reservas (${mostReservedVehicle.type})`
+                    : "No hay datos suficientes"}
+                </p>
               </div>
             </div>
 
@@ -289,8 +420,12 @@ const Dashboard = () => {
               </div>
               <div className="activity-content">
                 <h3>Destino Popular</h3>
-                <p className="activity-value">Aeropuerto Internacional</p>
-                <p className="activity-description">35% de todas las reservas</p>
+                <p className="activity-value">{popularDestination}</p>
+                <p className="activity-description">
+                  {popularDestination !== "No data" 
+                    ? "Destino más frecuente" 
+                    : "No hay datos suficientes"}
+                </p>
               </div>
             </div>
           </div>

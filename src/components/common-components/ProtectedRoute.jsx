@@ -1,8 +1,17 @@
 import { Navigate } from "react-router-dom"
+import { authService } from "../../Services/AuthService.ts"
+import { useEffect } from "react"
 
 const ProtectedRoute = ({ children }) => {
-  // En una aplicación real, verificaríamos el token JWT o la sesión
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
+  // Usar el método isAuthenticated de authService
+  const isAuthenticated = authService.isAuthenticated()
+
+  useEffect(() => {
+    // Verificar autenticación cuando el componente se monta
+    if (!isAuthenticated) {
+      
+    }
+  }, [isAuthenticated])
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />

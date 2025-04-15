@@ -3,11 +3,14 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import logo from "../assets/CQTRAILSLOGO.svg"
+import { authService } from "../Services/AuthService.ts"
+import { notificationService } from "../Utils/notificationService.ts"
 
 const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const validateForm = () => {
@@ -29,16 +32,40 @@ const Login = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  // Update the handleSubmit function to properly handle authentication
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // En una aplicación real, aquí se llamaría a la API para autenticar
-      console.log("Login attempt with:", { email, password })
-
-      // Simulamos una autenticación exitosa
-      localStorage.setItem("isAuthenticated", "true")
-      navigate("/")
+      setLoading(true)
+      
+      try {
+        // Preparar credenciales para el servicio de autenticación
+        const credentials = {
+          email,
+          passwordHash: password // El servicio espera passwordHash pero lo transforma a password
+        }
+        
+        
+        
+        // Llamar al servicio de autenticación
+        const response = await authService.login(credentials)
+        
+      
+        // Redirigir al usuario al dashboard
+        navigate("/")
+      } catch (error) {
+        // Mostrar mensaje de error
+        const errorMessage = 
+          error.response?.data?.message || 
+          error.message || 
+          "Error al iniciar sesión. Verifica tus credenciales."
+        
+        notificationService.showError(errorMessage)
+        console.error("Error de inicio de sesión:", error)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -61,6 +88,7 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="ejemplo@cqtrails.com"
+            disabled={loading}
           />
           {errors.email && <span className="error-message">{errors.email}</span>}
         </div>
@@ -73,12 +101,13 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Ingresa tu contraseña"
+            disabled={loading}
           />
           {errors.password && <span className="error-message">{errors.password}</span>}
         </div>
 
-        <button type="submit" className="auth-button">
-          Iniciar Sesión
+        <button type="submit" className="auth-button" disabled={loading}>
+          {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </button>
       </form>
 
@@ -86,7 +115,6 @@ const Login = () => {
         <p>
           ¿Olvidaste tu contraseña? <span className="auth-link">Recuperar</span>
         </p>
-        
       </div>
     </div>
   )

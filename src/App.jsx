@@ -11,11 +11,14 @@ import ProtectedRoute from "./components/common-components/ProtectedRoute"
 import Layout from "./components/common-components/Layout"
 import VehicleManagement from "./pages/VehicleManagement"
 import CityManagement from "./pages/CityManagement"
+import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 
 const App = () => {
   return (
     <div className="app-container">
+      <ToastContainer />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
