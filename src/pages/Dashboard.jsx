@@ -297,6 +297,8 @@ const Dashboard = () => {
           const user = registeredUsers.find(
             (user) => user.IdUsuario === reservation.IdUsuario
           )
+
+          console.log(reservation)
           
           return {
             id: reservation.IdReservacion,
@@ -307,14 +309,15 @@ const Dashboard = () => {
               : "Usuario Desconocido",
             // Add placeholder data for table display
             cliente: user ? `${user.Nombre} ${user.Apellido}` : "Usuario Desconocido",
-            origen: `${reservation.Origen}`,
-            destino: `${reservation.Destino}`,
+            origen: reservation.CiudadInicio ? `${reservation.CiudadInicio.Nombre}` : "No especificado",
+            destino: reservation.CiudadFin ? `${reservation.CiudadFin.Nombre}` : "No especificado",
             fecha: formatDate(reservation.FechaInicio),
             hora: new Date(reservation.FechaInicio).toLocaleTimeString('es-ES', { 
               hour: '2-digit', 
               minute: '2-digit' 
             }),
             estado: reservation.Estado
+            
           }
         })
         
