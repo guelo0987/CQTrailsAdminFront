@@ -5,6 +5,7 @@ import CloseIcon from "@mui/icons-material/Close"
 import ImageIcon from "@mui/icons-material/Image"
 import AirlineSeatReclineNormalIcon from "@mui/icons-material/AirlineSeatReclineNormal"
 import DirectionsCarFilledIcon from '@mui/icons-material/DirectionsCarFilled';
+import ImageWithFallback from "../ImageWithFallback"
 
 const VehicleModal = ({ vehicle, onSave, onClose }) => {
   const [formData, setFormData] = useState({
@@ -15,9 +16,9 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
     capacidad: 5,
     precio: 0,
     imagenes: [
-      { tipo: "general", file: null, preview: null },
-      { tipo: "interior", file: null, preview: null },
-      { tipo: "lateral", file: null, preview: null },
+      { tipo: "general", file: null, preview: null, originalUrl: null },
+      { tipo: "interior", file: null, preview: null, originalUrl: null },
+      { tipo: "lateral", file: null, preview: null, originalUrl: null },
     ],
   })
   const [errors, setErrors] = useState({})
@@ -27,11 +28,26 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
 
   useEffect(() => {
     if (vehicle) {
-      // Si estamos editando, convertimos las URLs a previews
+      // Si estamos editando, convertimos las URLs a previews y guardamos las URLs originales
       const imagenes = [
-        { tipo: "general", file: null, preview: vehicle.imagenes[0].url },
-        { tipo: "interior", file: null, preview: vehicle.imagenes[1].url },
-        { tipo: "lateral", file: null, preview: vehicle.imagenes[2].url },
+        { 
+          tipo: "general", 
+          file: null, 
+          preview: vehicle.imagenes[0]?.url || null,
+          originalUrl: vehicle.imagenes[0]?.url || null 
+        },
+        { 
+          tipo: "interior", 
+          file: null, 
+          preview: vehicle.imagenes[1]?.url || null,
+          originalUrl: vehicle.imagenes[1]?.url || null 
+        },
+        { 
+          tipo: "lateral", 
+          file: null, 
+          preview: vehicle.imagenes[2]?.url || null,
+          originalUrl: vehicle.imagenes[2]?.url || null 
+        },
       ]
 
       setFormData({
@@ -44,14 +60,18 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
         imagenes,
       })
 
-      setImagesComplete(true)
+      // Verificar si hay al menos una imagen
+      const hasAtLeastOneImage = imagenes.some(img => img.preview !== null);
+      setImagesComplete(hasAtLeastOneImage);
     }
   }, [vehicle])
 
   useEffect(() => {
-    // Verificar si todas las imágenes están completas
-    const allImagesSelected = formData.imagenes.every((img) => img.file !== null || img.preview !== null)
-    setImagesComplete(allImagesSelected)
+    // Verificar si hay al menos una imagen (archivo nuevo o URL original)
+    const hasAtLeastOneImage = formData.imagenes.some(
+      (img) => img.file !== null || img.originalUrl !== null
+    );
+    setImagesComplete(hasAtLeastOneImage);
   }, [formData.imagenes])
 
   const handleChange = (e) => {
@@ -63,25 +83,28 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
   }
 
   const handleImageChange = (e, index) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const newImagenes = [...formData.imagenes]
-      newImagenes[index] = {
-        ...newImagenes[index],
-        file: file,
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = () => {
+      const newImages = [...formData.imagenes];
+      newImages[index] = {
+        ...newImages[index],
+        file: file, // Store the actual file object
         preview: reader.result,
-      }
-
-      setFormData({
-        ...formData,
-        imagenes: newImagenes,
-      })
-    }
-    reader.readAsDataURL(file)
-  }
+        // Mantenemos la originalUrl para referencia
+      };
+      setFormData({ ...formData, imagenes: newImages });
+      
+      // Verificar si hay al menos una imagen (archivo nuevo o URL original)
+      const hasAtLeastOneImage = newImages.some(
+        (img) => img.file !== null || img.originalUrl !== null
+      );
+      setImagesComplete(hasAtLeastOneImage);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const validateForm = () => {
     const newErrors = {}
@@ -106,34 +129,61 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
       newErrors.precio = "El precio debe ser mayor a 0"
     }
 
-    if (!imagesComplete) {
-      newErrors.imagenes = "Se requieren las 3 imágenes (general, interior y lateral)"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-
-    if (validateForm()) {
-      // En una aplicación real, aquí se subirían las imágenes a un servicio
-      // y se obtendrían las URLs. Para este ejemplo, simulamos ese proceso.
-
-      // Preparar los datos para guardar
-      const vehicleData = {
-        ...formData,
-        // Convertir los archivos a URLs (en una app real, estas serían las URLs devueltas por el servicio)
-        imagenes: formData.imagenes.map((img) => ({
-          tipo: img.tipo,
-          url: img.preview || (vehicle && vehicle.imagenes.find((i) => i.tipo === img.tipo)?.url) || "/placeholder.svg",
-        })),
-      }
-
-      onSave(vehicleData)
+    e.preventDefault();
+    
+    // Validate form
+    const newErrors = {};
+    if (!formData.placa) newErrors.placa = "La placa es requerida";
+    if (!formData.modelo) newErrors.modelo = "El modelo es requerido";
+    if (!formData.tipo) newErrors.tipo = "El tipo de vehículo es requerido";
+    if (!formData.capacidad) newErrors.capacidad = "La capacidad es requerida";
+    if (!formData.precio) newErrors.precio = "El precio es requerido";
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
-  }
+    
+    // Preparar los datos para guardar, preservando las URLs originales si no hay nuevas imágenes
+    const dataToSave = {
+      ...formData,
+      imagenes: formData.imagenes.map(img => {
+        // Si hay un nuevo archivo, lo enviamos pero mantenemos la referencia a la URL original
+        if (img.file) {
+          return { 
+            tipo: img.tipo, 
+            file: img.file,
+            url: img.originalUrl, // Mantenemos la URL original como referencia
+            originalUrl: img.originalUrl
+          };
+        }
+        // Si no hay nuevo archivo pero hay URL original, mantenemos un objeto con url original
+        if (img.originalUrl) {
+          return { 
+            tipo: img.tipo, 
+            file: null, 
+            url: img.originalUrl,
+            originalUrl: img.originalUrl
+          };
+        }
+        // Si no hay archivo ni URL original, es un espacio vacío
+        return { 
+          tipo: img.tipo, 
+          file: null,
+          url: null,
+          originalUrl: null
+        };
+      })
+    };
+    
+    // Pass the complete form data including images to the parent component
+    onSave(dataToSave);
+  };
 
   const getImageIcon = (tipo) => {
     switch (tipo) {
@@ -160,6 +210,24 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
         return "Imagen"
     }
   }
+
+  // Función para eliminar la imagen cargada o seleccionada
+  const handleRemoveImage = (index) => {
+    const newImages = [...formData.imagenes];
+    newImages[index] = {
+      ...newImages[index],
+      file: null,
+      preview: null,
+      // Mantenemos la originalUrl para referencia aunque esté "eliminada" en la interfaz
+    };
+    setFormData({ ...formData, imagenes: newImages });
+    
+    // Verificar si hay al menos una imagen (archivo nuevo o URL original)
+    const hasAtLeastOneImage = newImages.some(
+      (img) => img.file !== null || img.originalUrl !== null
+    );
+    setImagesComplete(hasAtLeastOneImage);
+  };
 
   return (
     <div className="modal-backdrop">
@@ -260,9 +328,53 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
 
             <div className="form-group">
               <label>Imágenes del Vehículo</label>
-              <p className="image-help-text">Se requieren exactamente 3 imágenes: vista general, interior y lateral.</p>
+              <p className="image-help-text">Se requiere al menos una imagen. Puede dejar las imágenes actuales o cargar nuevas.</p>
               {errors.imagenes && <span className="error-message">{errors.imagenes}</span>}
 
+              <style jsx>{`
+                .remove-image-button {
+                  position: absolute;
+                  top: 5px;
+                  right: 5px;
+                  background-color: rgba(255, 0, 0, 0.7);
+                  color: white;
+                  border: none;
+                  border-radius: 50%;
+                  width: 24px;
+                  height: 24px;
+                  font-size: 16px;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  z-index: 10;
+                }
+                
+                .remove-image-button:hover {
+                  background-color: rgba(255, 0, 0, 0.9);
+                }
+                
+                .image-upload-preview {
+                  position: relative;
+                  width: 100%;
+                  height: 120px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  overflow: hidden;
+                  border-radius: 8px;
+                  margin-bottom: 10px;
+                  background-color: #f0f0f0;
+                }
+                
+                .image-upload-preview img,
+                .image-upload-preview .drive-preview-container {
+                  max-width: 100%;
+                  max-height: 100%;
+                  object-fit: contain;
+                }
+              `}</style>
+              
               <div className="vehicle-images-upload">
                 {formData.imagenes.map((imagen, index) => (
                   <div key={imagen.tipo} className="image-upload-container">
@@ -270,11 +382,33 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
                       {getImageIcon(imagen.tipo)}
                       <span>{getImageLabel(imagen.tipo)}</span>
                       <div className="image-upload-preview">
-                        {imagen.preview ? (
-                          <img
-                            src={imagen.preview || "/placeholder.svg"}
-                            alt={`Vista previa - ${getImageLabel(imagen.tipo)}`}
-                          />
+                        {(imagen.preview || imagen.originalUrl) ? (
+                          <>
+                            {/* Si hay un preview de archivo nuevo, mostramos ese */}
+                            {imagen.preview ? (
+                              <img
+                                src={imagen.preview}
+                                alt={`Vista previa - ${getImageLabel(imagen.tipo)}`}
+                              />
+                            ) : imagen.originalUrl ? (
+                              /* Si no hay preview pero sí url original, usamos ImageWithFallback */
+                              <ImageWithFallback 
+                                url={imagen.originalUrl}
+                                alt={`${getImageLabel(imagen.tipo)}`}
+                              />
+                            ) : null}
+                            
+                            {/* Botón para eliminar la imagen */}
+                            {(imagen.preview || imagen.originalUrl) && (
+                              <button 
+                                type="button" 
+                                className="remove-image-button"
+                                onClick={() => handleRemoveImage(index)}
+                              >
+                                ×
+                              </button>
+                            )}
+                          </>
                         ) : (
                           <div className="no-image">Sin imagen</div>
                         )}

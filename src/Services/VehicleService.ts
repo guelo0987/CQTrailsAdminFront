@@ -116,8 +116,14 @@ class VehicleService {
                 
                 // Add each image file to the FormData
                 imageFiles.forEach((file, index) => {
+                    console.log(`Adding file to FormData: ${file.name}, size: ${file.size}`);
                     formData.append('files', file);
                 });
+                
+                // Log the FormData contents for debugging
+                for (let pair of formData.entries()) {
+                    console.log(pair[0], pair[1]);
+                }
                 
                 // Use multipart/form-data content type (axios sets this automatically with FormData)
                 response = await axiosInstance.put(url, formData);
