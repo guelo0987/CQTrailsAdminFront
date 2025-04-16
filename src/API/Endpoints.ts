@@ -43,5 +43,23 @@ export const endpoints = {
         porId: (id: number) => `reservaciones/${id}`,
         dashboard: 'reservaciones/estadisticas/dashboard',
         weeklyReservations: 'reservaciones/estadisticas/reservaciones-semana-actual',
+        // New endpoints based on the FastAPI router
+        approve: (id: number) => `reservaciones/${id}/aprobar`,
+        reject: (id: number) => `reservaciones/${id}/denegar`,
+        byUser: (userId: number) => `reservaciones?id_usuario=${userId}`,
+        byCompany: (companyId: number) => `reservaciones?id_empresa=${companyId}`,
+        byStatus: (status: string) => `reservaciones?estado=${status}`,
+        byDateRange: (startDate: string, endDate: string) => 
+            `reservaciones?fecha_inicio=${startDate}&fecha_fin=${endDate}`,
+        byCity: (startCityId?: number, endCityId?: number) => {
+            let query = 'reservaciones?';
+            if (startCityId) query += `ciudadinicioid=${startCityId}`;
+            if (endCityId) {
+                if (startCityId) query += '&';
+                query += `ciudadfinid=${endCityId}`;
+            }
+            return query;
+        },
+        update: (id: number) => `reservaciones/${id}`
     },
 }

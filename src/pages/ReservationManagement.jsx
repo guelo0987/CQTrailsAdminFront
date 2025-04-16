@@ -10,6 +10,8 @@ import FilterListIcon from "@mui/icons-material/FilterList"
 import EventIcon from "@mui/icons-material/Event"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import LocationOnIcon from "@mui/icons-material/LocationOn"
+import { reservationService } from "../Services/ReservationService"
+import { notificationService } from "../Utils/notificationService"
 
 const ReservationManagement = () => {
   const [reservations, setReservations] = useState([])
@@ -25,163 +27,62 @@ const ReservationManagement = () => {
   const [cityFilter, setCityFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
 
-  // Datos de ejemplo
+  // Load real data from API
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockCities = [
-        { IdCiudad: 1, Nombre: "Santiago", Estado: "Activo" },
-        { IdCiudad: 2, Nombre: "Valparaíso", Estado: "Activo" },
-        { IdCiudad: 3, Nombre: "Concepción", Estado: "Activo" },
-        { IdCiudad: 4, Nombre: "La Serena", Estado: "Inactivo" },
-        { IdCiudad: 5, Nombre: "Antofagasta", Estado: "Activo" },
-      ]
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch reservations
+        const reservationsResponse = await reservationService.getReservations()
+        if (reservationsResponse.success && reservationsResponse.data) {
+          setReservations(reservationsResponse.data)
+        }
+        
+        // Use mock cities instead of fetching from API
+        // This avoids the 401 Unauthorized error
+        setCities([
+          { IdCiudad: 1, Nombre: "Santiago", Estado: "Activo" },
+          { IdCiudad: 2, Nombre: "Valparaíso", Estado: "Activo" },
+          { IdCiudad: 3, Nombre: "Cancún", Estado: "Activo" },
+          { IdCiudad: 4, Nombre: "La Serena", Estado: "Inactivo" },
+          { IdCiudad: 5, Nombre: "Antofagasta", Estado: "Activo" },
+          { IdCiudad: 7, Nombre: "Samana", Estado: "Activo" },
+        ])
+        
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        notificationService.showError("Error al cargar los datos")
+        setLoading(false)
+      }
+    }
 
-      const mockReservations = [
-        {
-          IdReservacion: 1,
-          IdUsuario: 3,
-          IdEmpleado: 2,
-          IdEmpresa: 1,
-          IdCiudadOrigen: 1,
-          IdCiudadDestino: 2,
-          FechaInicio: "2023-04-15T08:00:00",
-          FechaFin: "2023-04-15T17:00:00",
-          RutaPersonalizada: "Ruta turística por el centro",
-          RequerimientosAdicionales: "Vehículo con aire acondicionado",
-          Estado: "Completada",
-          FechaReservacion: "2023-04-10T14:30:00",
-          FechaConfirmacion: "2023-04-11T09:15:00",
-          Total: 85000,
-          SubTotal: 75000,
-          MotivoRechazo: null,
-          Usuario: { nombre: "Carlos", apellido: "Mendoza" },
-          Empleado: { nombre: "Juan", apellido: "Pérez" },
-          Empresa: { Nombre: "Transportes Rápidos S.A." },
-          CiudadOrigen: { Nombre: "Santiago" },
-          CiudadDestino: { Nombre: "Valparaíso" },
-        },
-        {
-          IdReservacion: 2,
-          IdUsuario: 4,
-          IdEmpleado: null,
-          IdEmpresa: 2,
-          IdCiudadOrigen: 2,
-          IdCiudadDestino: 3,
-          FechaInicio: "2023-04-20T09:30:00",
-          FechaFin: "2023-04-20T18:30:00",
-          RutaPersonalizada: "Traslado al aeropuerto",
-          RequerimientosAdicionales: "Espacio para 2 maletas grandes",
-          Estado: "Pendiente",
-          FechaReservacion: "2023-04-15T10:45:00",
-          FechaConfirmacion: null,
-          Total: 45000,
-          SubTotal: 40000,
-          MotivoRechazo: null,
-          Usuario: { nombre: "María", apellido: "González" },
-          Empleado: null,
-          Empresa: { Nombre: "Viajes Seguros Ltda." },
-          CiudadOrigen: { Nombre: "Valparaíso" },
-          CiudadDestino: { Nombre: "Concepción" },
-        },
-        {
-          IdReservacion: 3,
-          IdUsuario: 5,
-          IdEmpleado: null,
-          IdEmpresa: 3,
-          IdCiudadOrigen: 3,
-          IdCiudadDestino: 4,
-          FechaInicio: "2023-04-18T14:00:00",
-          FechaFin: "2023-04-18T20:00:00",
-          RutaPersonalizada: "Recorrido por viñedos",
-          RequerimientosAdicionales: "Vehículo para 6 personas",
-          Estado: "Rechazada",
-          FechaReservacion: "2023-04-12T16:20:00",
-          FechaConfirmacion: null,
-          Total: 120000,
-          SubTotal: 100000,
-          MotivoRechazo: "No hay vehículos disponibles para la fecha solicitada",
-          Usuario: { nombre: "Pedro", apellido: "Sánchez" },
-          Empleado: null,
-          Empresa: { Nombre: "Movilidad Urbana SpA" },
-          CiudadOrigen: { Nombre: "Concepción" },
-          CiudadDestino: { Nombre: "La Serena" },
-        },
-        {
-          IdReservacion: 4,
-          IdUsuario: 2,
-          IdEmpleado: 1,
-          IdEmpresa: 1,
-          IdCiudadOrigen: 1,
-          IdCiudadDestino: 5,
-          FechaInicio: "2023-04-25T10:00:00",
-          FechaFin: "2023-04-25T16:00:00",
-          RutaPersonalizada: "Tour por la costa",
-          RequerimientosAdicionales: "Paradas en miradores",
-          Estado: "Completada",
-          FechaReservacion: "2023-04-18T09:10:00",
-          FechaConfirmacion: "2023-04-19T11:30:00",
-          Total: 95000,
-          SubTotal: 85000,
-          MotivoRechazo: null,
-          Usuario: { nombre: "Ana", apellido: "Martínez" },
-          Empleado: { nombre: "Roberto", apellido: "Gómez" },
-          Empresa: { Nombre: "Transportes Rápidos S.A." },
-          CiudadOrigen: { Nombre: "Santiago" },
-          CiudadDestino: { Nombre: "Antofagasta" },
-        },
-        {
-          IdReservacion: 5,
-          IdUsuario: 6,
-          IdEmpleado: null,
-          IdEmpresa: 2,
-          IdCiudadOrigen: 5,
-          IdCiudadDestino: 1,
-          FechaInicio: "2023-04-30T08:30:00",
-          FechaFin: "2023-04-30T12:30:00",
-          RutaPersonalizada: "Traslado al centro comercial",
-          RequerimientosAdicionales: null,
-          Estado: "Pendiente",
-          FechaReservacion: "2023-04-25T14:50:00",
-          FechaConfirmacion: null,
-          Total: 35000,
-          SubTotal: 30000,
-          MotivoRechazo: null,
-          Usuario: { nombre: "Laura", apellido: "Díaz" },
-          Empleado: null,
-          Empresa: { Nombre: "Viajes Seguros Ltda." },
-          CiudadOrigen: { Nombre: "Antofagasta" },
-          CiudadDestino: { Nombre: "Santiago" },
-        },
-      ]
-      setCities(mockCities)
-      setReservations(mockReservations)
-      setLoading(false)
-    }, 1000)
+    fetchData()
   }, [])
 
-  // Filtrar reservaciones por búsqueda, estado y ciudad
+  // Filter reservations by search term, status, and city
   const filteredReservations = reservations.filter((reservation) => {
     const searchMatch =
-      (reservation.Usuario?.nombre + " " + reservation.Usuario?.apellido)
+      (reservation.Usuarios1?.nombre + " " + reservation.Usuarios1?.apellido || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      (reservation.Empresa?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (reservation.Empresas1?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (reservation.RutaPersonalizada || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (reservation.CiudadOrigen?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (reservation.CiudadDestino?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
+      (reservation.CiudadInicio?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (reservation.CiudadFin?.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
 
     const statusMatch = statusFilter === "all" || reservation.Estado.toLowerCase() === statusFilter.toLowerCase()
 
     const cityMatch =
       cityFilter === "all" ||
-      reservation.IdCiudadOrigen === Number.parseInt(cityFilter) ||
-      reservation.IdCiudadDestino === Number.parseInt(cityFilter)
+      reservation.ciudadinicioid === Number.parseInt(cityFilter) ||
+      reservation.ciudadfinid === Number.parseInt(cityFilter)
 
     return searchMatch && statusMatch && cityMatch
   })
 
-  // Paginación
+  // Pagination
   const indexOfLastReservation = currentPage * reservationsPerPage
   const indexOfFirstReservation = indexOfLastReservation - reservationsPerPage
   const currentReservations = filteredReservations.slice(indexOfFirstReservation, indexOfLastReservation)
@@ -190,12 +91,30 @@ const ReservationManagement = () => {
   // Handlers
   const handleSearch = (e) => {
     e.preventDefault()
-    // La búsqueda ya se aplica automáticamente con el estado searchTerm
+    // The search is already applied automatically with the searchTerm state
   }
 
-  const handleViewDetails = (reservation) => {
-    setCurrentReservation(reservation)
-    setShowDetailModal(true)
+  const handleViewDetails = async (reservation) => {
+    try {
+      // Get detailed reservation data
+      const response = await reservationService.getReservationById(reservation.IdReservacion)
+      if (response.success && response.data) {
+        // Add a default Total property if it doesn't exist
+        setCurrentReservation({
+          ...response.data,
+          Total: response.data.Total || 0
+        });
+      } else {
+        setCurrentReservation(reservation)
+      }
+      setShowDetailModal(true)
+    } catch (error) {
+      console.error("Error fetching reservation details:", error)
+      notificationService.showError("Error al cargar los detalles de la reservación")
+      // Fallback to using the reservation from the list
+      setCurrentReservation(reservation)
+      setShowDetailModal(true)
+    }
   }
 
   const handleChangeStatus = (reservation) => {
@@ -203,24 +122,41 @@ const ReservationManagement = () => {
     setShowStatusModal(true)
   }
 
-  const handleStatusChange = (newStatus, motivoRechazo = null) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedReservations = reservations.map((res) => {
-      if (res.IdReservacion === currentReservation.IdReservacion) {
-        return {
-          ...res,
-          Estado: newStatus,
-          MotivoRechazo: newStatus === "Rechazada" ? motivoRechazo : res.MotivoRechazo,
-          FechaConfirmacion: newStatus === "Completada" ? new Date().toISOString() : res.FechaConfirmacion,
-        }
+  const handleStatusChange = async (newStatus, motivoRechazo = null) => {
+    try {
+      setLoading(true)
+      
+      if (newStatus === "Completada") {
+        // Approve reservation
+        await reservationService.approveReservation(currentReservation.IdReservacion, {
+          mensaje: "Reservación aprobada por administrador"
+        })
+      } else if (newStatus === "Rechazada") {
+        // Reject reservation
+        await reservationService.rejectReservation(currentReservation.IdReservacion, {
+          motivo: motivoRechazo
+        })
+      } else {
+        // Update status (for Pendiente or other statuses)
+        await reservationService.updateReservationStatus(currentReservation.IdReservacion, newStatus)
       }
-      return res
-    })
-    setReservations(updatedReservations)
-    setShowStatusModal(false)
+      
+      // Refresh reservations list
+      const response = await reservationService.getReservations()
+      if (response.success && response.data) {
+        setReservations(response.data)
+      }
+      
+      setShowStatusModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error updating reservation status:", error)
+      notificationService.showError("Error al actualizar el estado de la reservación")
+      setLoading(false)
+    }
   }
 
-  // Formatear fecha para mostrar
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return "N/A"
     const date = new Date(dateString)
@@ -233,7 +169,7 @@ const ReservationManagement = () => {
     })
   }
 
-  // Obtener clase de estado para el estilo
+  // Get status class for styling
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
       case "completada":
@@ -244,6 +180,77 @@ const ReservationManagement = () => {
         return "status-rejected"
       default:
         return ""
+    }
+  }
+
+  // Handle filter by status
+  const handleStatusFilterChange = async (status) => {
+    setStatusFilter(status)
+    setCurrentPage(1)
+    
+    if (status !== "all") {
+      try {
+        setLoading(true)
+        const response = await reservationService.getReservationsByStatus(status)
+        if (response.success && response.data) {
+          setReservations(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error(`Error fetching reservations with status ${status}:`, error)
+        notificationService.showError("Error al filtrar reservaciones por estado")
+        setLoading(false)
+      }
+    } else {
+      // If "all" is selected, fetch all reservations
+      try {
+        setLoading(true)
+        const response = await reservationService.getReservations()
+        if (response.success && response.data) {
+          setReservations(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching all reservations:", error)
+        notificationService.showError("Error al cargar las reservaciones")
+        setLoading(false)
+      }
+    }
+  }
+
+  // Handle filter by city
+  const handleCityFilterChange = async (cityId) => {
+    setCityFilter(cityId)
+    setCurrentPage(1)
+    
+    if (cityId !== "all") {
+      try {
+        setLoading(true)
+        // You can decide whether to filter by start city, end city, or both
+        const response = await reservationService.getReservationsByCity(cityId, cityId)
+        if (response.success && response.data) {
+          setReservations(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error(`Error fetching reservations for city ${cityId}:`, error)
+        notificationService.showError("Error al filtrar reservaciones por ciudad")
+        setLoading(false)
+      }
+    } else {
+      // If "all" is selected, fetch all reservations
+      try {
+        setLoading(true)
+        const response = await reservationService.getReservations()
+        if (response.success && response.data) {
+          setReservations(response.data)
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching all reservations:", error)
+        notificationService.showError("Error al cargar las reservaciones")
+        setLoading(false)
+      }
     }
   }
 
@@ -284,6 +291,22 @@ const ReservationManagement = () => {
               onClick={() => {
                 setStatusFilter("all");
                 setCityFilter("all");
+                // Reload all reservations
+                const fetchAllReservations = async () => {
+                  try {
+                    setLoading(true)
+                    const response = await reservationService.getReservations()
+                    if (response.success && response.data) {
+                      setReservations(response.data)
+                    }
+                    setLoading(false)
+                  } catch (error) {
+                    console.error("Error fetching all reservations:", error)
+                    notificationService.showError("Error al cargar las reservaciones")
+                    setLoading(false)
+                  }
+                }
+                fetchAllReservations()
               }}
             >
               Restablecer filtros
@@ -298,7 +321,7 @@ const ReservationManagement = () => {
               </label>
               <select 
                 value={statusFilter} 
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
               >
                 <option value="all">Todos los estados</option>
                 <option value="pendiente">Pendientes</option>
@@ -314,7 +337,7 @@ const ReservationManagement = () => {
               </label>
               <select 
                 value={cityFilter} 
-                onChange={(e) => setCityFilter(e.target.value)}
+                onChange={(e) => handleCityFilterChange(e.target.value)}
               >
                 <option value="all">Todas las ciudades</option>
                 {cities.map((city) => (
@@ -353,66 +376,75 @@ const ReservationManagement = () => {
                 <th>Acciones</th>
               </tr>
             </thead>
+            {/* Table rendering section */}
             <tbody>
-              {currentReservations.map((reservation) => (
-                <tr key={reservation.IdReservacion}>
-                  <td>{reservation.IdReservacion}</td>
-                  <td>
-                    {reservation.Usuario ? `${reservation.Usuario.nombre} ${reservation.Usuario.apellido}` : "N/A"}
-                  </td>
-                  <td>{reservation.Empresa?.Nombre || "N/A"}</td>
-                  <td>
-                    <div className="city-cell">
-                      <LocationOnIcon fontSize="small" className="city-icon" />
-                      {reservation.CiudadOrigen?.Nombre || "N/A"}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="city-cell">
-                      <LocationOnIcon fontSize="small" className="city-icon" />
-                      {reservation.CiudadDestino?.Nombre || "N/A"}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="date-cell">
-                      <CalendarMonthIcon fontSize="small" className="date-icon" />
-                      {formatDate(reservation.FechaInicio)}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="date-cell">
-                      <EventIcon fontSize="small" className="date-icon" />
-                      {formatDate(reservation.FechaFin)}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`reservation-status ${getStatusClass(reservation.Estado)}`}>
-                      {reservation.Estado}
-                    </span>
-                  </td>
-                  <td className="price-cell">${reservation.Total.toLocaleString()}</td>
-                  <td>
-                    <div className="reservation-actions-cell">
-                      <button
-                        className="action-button view-button"
-                        onClick={() => handleViewDetails(reservation)}
-                        title="Ver detalles"
-                      >
-                        <VisibilityIcon fontSize="small" />
-                        Detalles
-                      </button>
-                      <button
-                        className="action-button edit-button"
-                        onClick={() => handleChangeStatus(reservation)}
-                        title="Cambiar estado"
-                      >
-                        <EditIcon fontSize="small" />
-                        Estado
-                      </button>
-                    </div>
+              {currentReservations.length > 0 ? (
+                currentReservations.map((reservation) => (
+                  <tr key={reservation.IdReservacion}>
+                    <td>{reservation.IdReservacion}</td>
+                    <td>
+                      {reservation.Usuarios1 ? `${reservation.Usuarios1.nombre} ${reservation.Usuarios1.apellido}` : "N/A"}
+                    </td>
+                    <td>{reservation.Empresas1?.Nombre || "N/A"}</td>
+                    <td>
+                      <div className="city-cell">
+                        <LocationOnIcon fontSize="small" className="city-icon" />
+                        {reservation.CiudadInicio?.Nombre || "N/A"}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="city-cell">
+                        <LocationOnIcon fontSize="small" className="city-icon" />
+                        {reservation.CiudadFin?.Nombre || "N/A"}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="date-cell">
+                        <CalendarMonthIcon fontSize="small" className="date-icon" />
+                        {formatDate(reservation.FechaInicio)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="date-cell">
+                        <EventIcon fontSize="small" className="date-icon" />
+                        {formatDate(reservation.FechaFin)}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`reservation-status ${getStatusClass(reservation.Estado)}`}>
+                        {reservation.Estado}
+                      </span>
+                    </td>
+                    <td className="price-cell">${reservation.Total?.toLocaleString() || "0"}</td>
+                    <td>
+                      <div className="reservation-actions-cell">
+                        <button
+                          className="action-button view-button"
+                          onClick={() => handleViewDetails(reservation)}
+                          title="Ver detalles"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                          Detalles
+                        </button>
+                        <button
+                          className="action-button edit-button"
+                          onClick={() => handleChangeStatus(reservation)}
+                          title="Cambiar estado"
+                        >
+                          <EditIcon fontSize="small" />
+                          Estado
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="no-data-message">
+                    No se encontraron reservaciones
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
 

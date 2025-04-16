@@ -154,11 +154,11 @@ const ReservationDetailModal = ({ reservation, onClose, formatDate }) => {
             <div className="detail-info-grid">
               <div className="detail-info-item">
                 <span className="detail-label">Subtotal:</span>
-                <span className="detail-value">${reservation.SubTotal.toLocaleString()}</span>
+                <span className="detail-value">${reservation.SubTotal?.toLocaleString() || "0"}</span>
               </div>
               <div className="detail-info-item">
                 <span className="detail-label">Total:</span>
-                <span className="detail-value total-price">${reservation.Total.toLocaleString()}</span>
+                <span className="detail-value total-price">${reservation.Total?.toLocaleString() || "0"}</span>
               </div>
             </div>
           </div>

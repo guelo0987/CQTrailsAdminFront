@@ -229,6 +229,142 @@ class ReservationService {
             throw error;
         }
     }
+
+    /**
+     * Approve a reservation
+     * @param id Reservation ID
+     * @param approvalData Optional approval data (reason, notes, etc.)
+     * @returns Promise with approved reservation
+     */
+    async approveReservation(id: number, approvalData: any = {}) {
+        try {
+            const response = await axiosInstance.post(
+                `${this.baseURL}${endpoints.reservations.approve(id)}`, 
+                approvalData
+            );
+            notificationService.showSuccess('Reservación aprobada exitosamente');
+            return response.data;
+        } catch (error) {
+            console.error(`Error approving reservation with ID ${id}:`, error);
+            const errorMessage = error.response?.data?.message || 'Error al aprobar la reservación';
+            notificationService.showError(errorMessage);
+            throw error;
+        }
+    }
+
+    /**
+     * Reject a reservation
+     * @param id Reservation ID
+     * @param rejectionData Rejection data (reason, notes, etc.)
+     * @returns Promise with rejected reservation
+     */
+    async rejectReservation(id: number, rejectionData: any = {}) {
+        try {
+            const response = await axiosInstance.post(
+                `${this.baseURL}${endpoints.reservations.reject(id)}`, 
+                rejectionData
+            );
+            notificationService.showSuccess('Reservación rechazada exitosamente');
+            return response.data;
+        } catch (error) {
+            console.error(`Error rejecting reservation with ID ${id}:`, error);
+            const errorMessage = error.response?.data?.message || 'Error al rechazar la reservación';
+            notificationService.showError(errorMessage);
+            throw error;
+        }
+    }
+
+    /**
+     * Get reservations by user ID
+     * @param userId User ID
+     * @param params Additional query parameters
+     * @returns Promise with user's reservations
+     */
+    async getReservationsByUser(userId: number, params: ReservationQueryParams = {}) {
+        try {
+            const url = `${this.baseURL}${endpoints.reservations.byUser(userId)}`;
+            // Add additional query params if needed
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching reservations for user ${userId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get reservations by company ID
+     * @param companyId Company ID
+     * @param params Additional query parameters
+     * @returns Promise with company's reservations
+     */
+    async getReservationsByCompany(companyId: number, params: ReservationQueryParams = {}) {
+        try {
+            const url = `${this.baseURL}${endpoints.reservations.byCompany(companyId)}`;
+            // Add additional query params if needed
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching reservations for company ${companyId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get reservations by status
+     * @param status Reservation status (Pendiente, Aprobada, Denegada)
+     * @param params Additional query parameters
+     * @returns Promise with filtered reservations
+     */
+    async getReservationsByStatus(status: string, params: ReservationQueryParams = {}) {
+        try {
+            const url = `${this.baseURL}${endpoints.reservations.byStatus(status)}`;
+            // Add additional query params if needed
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching reservations with status ${status}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get reservations by date range
+     * @param startDate Start date (ISO format)
+     * @param endDate End date (ISO format)
+     * @param params Additional query parameters
+     * @returns Promise with filtered reservations
+     */
+    async getReservationsByDateRange(startDate: string, endDate: string, params: ReservationQueryParams = {}) {
+        try {
+            const url = `${this.baseURL}${endpoints.reservations.byDateRange(startDate, endDate)}`;
+            // Add additional query params if needed
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching reservations between ${startDate} and ${endDate}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get reservations by city
+     * @param startCityId Optional start city ID
+     * @param endCityId Optional end city ID
+     * @param params Additional query parameters
+     * @returns Promise with filtered reservations
+     */
+    async getReservationsByCity(startCityId?: number, endCityId?: number, params: ReservationQueryParams = {}) {
+        try {
+            const url = `${this.baseURL}${endpoints.reservations.byCity(startCityId, endCityId)}`;
+            // Add additional query params if needed
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching reservations by city:`, error);
+            throw error;
+        }
+    }
 }
 
 // Export a singleton instance
