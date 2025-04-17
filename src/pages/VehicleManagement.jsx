@@ -204,7 +204,16 @@ const VehicleManagement = () => {
           file: img.file
         }));
       
+      // Determinar qué imágenes deben eliminarse
+      const imagesToRemove = vehicleData.imagenes
+        .filter(img => img.toBeRemoved === true)
+        .map((img, index) => ({
+          index: vehicleData.imagenes.findIndex(i => i === img),
+          position: index
+        }));
+      
       console.log("Image files to upload:", imageFiles); // Debug log
+      console.log("Images to remove:", imagesToRemove); // Debug log
       
       // Prepare vehicle data for the API using the correct field names
       const apiVehicleData = {
@@ -214,58 +223,62 @@ const VehicleManagement = () => {
         TipoVehiculo: vehicleData.tipo,
         Capacidad: vehicleData.capacidad,
         Price: vehicleData.precio,
-        Disponible: true
+        Disponible: true,
+        ImagesToRemove: imagesToRemove.map(img => img.position) // Posiciones a eliminar
       };
+      
+      // Flag para indicar si estamos editando imágenes
+      const isEditingImages = imageFiles.length > 0 || imagesToRemove.length > 0;
       
       let response;
       
       if (currentVehicle) {
         // Update existing vehicle
         const filesToUpload = imageFiles.map(f => f.file);
-        response = await vehicleService.updateVehicle(currentVehicle.id, apiVehicleData, filesToUpload);
+        
+        // Siempre mantener las imágenes existentes, a menos que se indique explícitamente eliminarlas
+        response = await vehicleService.updateVehicle(
+          currentVehicle.id, 
+          apiVehicleData, 
+          filesToUpload,
+          true // Siempre mantener imágenes existentes (las que no se marcan para eliminar)
+        );
         
         if (response.success && response.data) {
-          // Inicializar con las imágenes existentes
-          let processedImages = [
-            { tipo: "general", url: currentVehicle.imagenes[0]?.url || "" },
-            { tipo: "interior", url: currentVehicle.imagenes[1]?.url || "" },
-            { tipo: "lateral", url: currentVehicle.imagenes[2]?.url || "" },
-          ];
+          // Inicializamos el array con una copia profunda de las imágenes existentes
+          let processedImages = JSON.parse(JSON.stringify(currentVehicle.imagenes));
           
-          // Si hay imágenes nuevas subidas, actualizar las URLs correspondientes
-          if (imageFiles.length > 0) {
-            // El backend puede devolver las nuevas URLs de imágenes
-            if (response.data.Image_url) {
-              // Para cada imagen subida, actualizar su URL en la posición correcta
-              let newUrlsMap = new Map();
-              
-              if (response.data.Image_url.image1) {
-                newUrlsMap.set(0, response.data.Image_url.image1);
-              }
-              
-              if (response.data.Image_url.image2) {
-                newUrlsMap.set(1, response.data.Image_url.image2);
-              }
-              
-              if (response.data.Image_url.image3) {
-                newUrlsMap.set(2, response.data.Image_url.image3);
-              }
-              
-              // Actualizar solo las posiciones de las imágenes que fueron subidas
-              imageFiles.forEach((imgFile, idx) => {
-                const originalIndex = imgFile.index;
-                const newUrl = newUrlsMap.get(idx);
-                
-                if (newUrl && originalIndex !== undefined) {
-                  processedImages[originalIndex].url = newUrl;
-                }
-              });
+          // Eliminar las imágenes marcadas para eliminación
+          imagesToRemove.forEach(img => {
+            if (img.index >= 0 && img.index < processedImages.length) {
+              processedImages[img.index].url = ""; // Vaciar la URL
             }
-          } else {
-            // Si no hay nuevas imágenes subidas, solo conservar las URLs originales
-            vehicleData.imagenes.forEach((img, index) => {
-              if (img.url) {
-                processedImages[index].url = img.url;
+          });
+          
+          // Si hay nuevas imágenes y el backend devuelve URLs
+          if (isEditingImages && response.data.Image_url) {
+            // Mapear las nuevas URLs a sus posiciones correspondientes
+            const newUrlsMap = {};
+            
+            if (response.data.Image_url.image1) {
+              newUrlsMap[0] = response.data.Image_url.image1;
+            }
+            
+            if (response.data.Image_url.image2) {
+              newUrlsMap[1] = response.data.Image_url.image2;
+            }
+            
+            if (response.data.Image_url.image3) {
+              newUrlsMap[2] = response.data.Image_url.image3;
+            }
+            
+            // Actualizar solo las posiciones de las imágenes que fueron subidas
+            imageFiles.forEach((imgFile, idx) => {
+              const originalIndex = imgFile.index;
+              
+              if (newUrlsMap[idx] && originalIndex !== undefined) {
+                // Solo actualizamos la URL si realmente hay una nueva
+                processedImages[originalIndex].url = newUrlsMap[idx];
               }
             });
           }

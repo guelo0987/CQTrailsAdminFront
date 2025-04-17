@@ -149,26 +149,38 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
       return;
     }
     
-    // Preparar los datos para guardar, preservando las URLs originales si no hay nuevas imágenes
+    // Preparar los datos para guardar
     const dataToSave = {
       ...formData,
       imagenes: formData.imagenes.map(img => {
-        // Si hay un nuevo archivo, lo enviamos pero mantenemos la referencia a la URL original
+        // Si hay un nuevo archivo, lo enviamos
         if (img.file) {
           return { 
             tipo: img.tipo, 
             file: img.file,
             url: img.originalUrl, // Mantenemos la URL original como referencia
-            originalUrl: img.originalUrl
+            originalUrl: img.originalUrl,
+            toBeRemoved: false
           };
         }
-        // Si no hay nuevo archivo pero hay URL original, mantenemos un objeto con url original
+        // Si la imagen debe ser eliminada
+        if (img.toBeRemoved) {
+          return { 
+            tipo: img.tipo, 
+            file: null, 
+            url: null,
+            originalUrl: null,
+            toBeRemoved: true
+          };
+        }
+        // Si no hay nuevo archivo pero hay URL original, la mantenemos
         if (img.originalUrl) {
           return { 
             tipo: img.tipo, 
             file: null, 
             url: img.originalUrl,
-            originalUrl: img.originalUrl
+            originalUrl: img.originalUrl,
+            toBeRemoved: false
           };
         }
         // Si no hay archivo ni URL original, es un espacio vacío
@@ -176,7 +188,8 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
           tipo: img.tipo, 
           file: null,
           url: null,
-          originalUrl: null
+          originalUrl: null,
+          toBeRemoved: false
         };
       })
     };
@@ -218,13 +231,15 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
       ...newImages[index],
       file: null,
       preview: null,
-      // Mantenemos la originalUrl para referencia aunque esté "eliminada" en la interfaz
+      // Marcamos explícitamente que la imagen debe ser eliminada
+      originalUrl: null,
+      toBeRemoved: true // Nueva bandera para marcar explícitamente la eliminación
     };
     setFormData({ ...formData, imagenes: newImages });
     
     // Verificar si hay al menos una imagen (archivo nuevo o URL original)
     const hasAtLeastOneImage = newImages.some(
-      (img) => img.file !== null || img.originalUrl !== null
+      (img) => img.file !== null || (img.originalUrl !== null && !img.toBeRemoved)
     );
     setImagesComplete(hasAtLeastOneImage);
   };
@@ -357,7 +372,7 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
                 .image-upload-preview {
                   position: relative;
                   width: 100%;
-                  height: 120px;
+                  height: 160px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -365,13 +380,76 @@ const VehicleModal = ({ vehicle, onSave, onClose }) => {
                   border-radius: 8px;
                   margin-bottom: 10px;
                   background-color: #f0f0f0;
+                  border: 1px solid #ddd;
                 }
                 
-                .image-upload-preview img,
-                .image-upload-preview .drive-preview-container {
+                .image-upload-preview img {
                   max-width: 100%;
                   max-height: 100%;
                   object-fit: contain;
+                  display: block;
+                  margin: auto;
+                }
+                
+                .image-upload-preview .drive-preview-container {
+                  width: 100%;
+                  height: 100%;
+                  overflow: hidden;
+                }
+                
+                .image-upload-container {
+                  flex: 1;
+                  min-width: 150px;
+                  margin: 0 5px;
+                }
+                
+                .vehicle-images-upload {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 15px;
+                  margin-bottom: 15px;
+                }
+                
+                .image-upload-label {
+                  display: block;
+                  text-align: center;
+                  cursor: pointer;
+                  padding: 10px;
+                  border-radius: 8px;
+                  background-color: #f9f9f9;
+                  transition: all 0.3s ease;
+                }
+                
+                .image-upload-label:hover {
+                  background-color: #f0f0f0;
+                }
+                
+                .image-upload-input {
+                  display: none;
+                }
+                
+                .select-image-button {
+                  background-color: #4CAF50;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  text-align: center;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  transition: background-color 0.3s;
+                  width: 100%;
+                  margin-top: 5px;
+                }
+                
+                .select-image-button:hover {
+                  background-color: #45a049;
+                }
+                
+                .no-image {
+                  color: #999;
+                  font-size: 14px;
+                  padding: 20px;
                 }
               `}</style>
               

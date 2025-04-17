@@ -94,9 +94,11 @@ class VehicleService {
      * Update existing vehicle
      * @param id Vehicle ID
      * @param vehicle Updated vehicle data
+     * @param imageFiles Optional image files to upload
+     * @param keepExistingImages Whether to keep existing images (default: true)
      * @returns Promise with updated vehicle
      */
-    async updateVehicle(id: number, vehicle: Vehicle, imageFiles?: File[]) {
+    async updateVehicle(id: number, vehicle: Vehicle, imageFiles?: File[], keepExistingImages: boolean = true) {
         try {
             // Create URL with query parameters instead of sending JSON body
             let url = `${this.baseURL}${endpoints.vehicles.porId(id)}?`;
@@ -107,9 +109,12 @@ class VehicleService {
             url += `&Ano=${encodeURIComponent(vehicle.Ano)}`;
             url += `&Price=${encodeURIComponent(vehicle.Price)}`;
             url += `&Disponible=${vehicle.Disponible !== undefined ? vehicle.Disponible : true}`;
+            url += `&keepExistingImages=${keepExistingImages}`;
             
             let response;
             
+            // IMPORTANTE: Solo enviar archivos si hay archivos nuevos para subir
+            // De lo contrario, el backend borrará todas las imágenes existentes
             if (imageFiles && imageFiles.length > 0) {
                 // If we have image files, use FormData
                 const formData = new FormData();
@@ -128,8 +133,12 @@ class VehicleService {
                 // Use multipart/form-data content type (axios sets this automatically with FormData)
                 response = await axiosInstance.put(url, formData);
             } else {
-                // No files to upload, just send the request with empty FormData
-                response = await axiosInstance.put(url, new FormData());
+                // Para preservar imágenes existentes cuando no hay nuevas imágenes,
+                // vamos a hacer una petición sin el campo "files" en el FormData
+                
+                // Nótese que para FastAPI, si no enviamos ningún archivo, la API no modificará las imágenes existentes
+                // En lugar de enviar un FormData vacío, vamos a usar un objeto JSON vacío ({}), que no será interpretado como 'files'
+                response = await axiosInstance.put(url, {});
             }
             
             notificationService.showSuccess('Vehículo actualizado exitosamente');

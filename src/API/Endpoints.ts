@@ -26,6 +26,14 @@ export const endpoints = {
     users:{
         list: 'usuarios/clientes',
         porId: (id: number) => `usuarios/${id}`,
+        // New endpoints based on the FastAPI router
+        allUsers: 'usuarios',
+        create: 'usuarios',
+        update: (id: number) => `usuarios/${id}`,
+        delete: (id: number) => `usuarios/${id}`,
+        changeRole: (id: number) => `usuarios/${id}/rol`,
+        changeStatus: (id: number) => `usuarios/${id}/activacion`,
+        changePassword: (id: number) => `usuarios/${id}/password`,
     },
 
     vehicles:{

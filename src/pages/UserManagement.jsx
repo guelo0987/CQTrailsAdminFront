@@ -11,9 +11,12 @@ import DeleteIcon from "@mui/icons-material/Delete"
 import BlockIcon from "@mui/icons-material/Block"
 import CheckCircleIcon from "@mui/icons-material/CheckCircle"
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings"
+import { userService } from "../Services/UserService.ts"
+import { notificationService } from "../Utils/notificationService.ts"
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
+  const [roles, setRoles] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [showUserModal, setShowUserModal] = useState(false)
@@ -23,38 +26,48 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [usersPerPage] = useState(10)
 
-  // Roles de ejemplo
-  const roles = [
-    { id: 0, name: "Administrador" },
-    { id: 1, name: "Operador" },
-    { id: 2, name: "Cliente" },
-  ]
-
-  // Datos de ejemplo
+  // Fetch users from API
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockUsers = [
-        { id: 1, email: "admin@cqtrails.com", nombre: "Admin", apellido: "Principal", idRol: 0, activo: true },
-        { id: 2, email: "operador@cqtrails.com", nombre: "Operador", apellido: "Ejemplo", idRol: 1, activo: true },
-        { id: 3, email: "cliente@empresa.com", nombre: "Cliente", apellido: "Empresa", idRol: 2, activo: true },
-        { id: 4, email: "usuario@inactivo.com", nombre: "Usuario", apellido: "Inactivo", idRol: 2, activo: false },
-        { id: 5, email: "otro@cqtrails.com", nombre: "Otro", apellido: "Usuario", idRol: 1, activo: true },
-      ]
-      setUsers(mockUsers)
-      setLoading(false)
-    }, 1000)
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch all users
+        const response = await userService.getAllUsers()
+        if (response.success && response.data) {
+          setUsers(response.data)
+        } else {
+          notificationService.showError("Error al cargar los usuarios")
+        }
+        
+        // For now, use mock roles
+        // In a real implementation, you would fetch roles from an API
+        setRoles([
+          { id: 1, name: "Administrador" },
+          { id: 2, name: "Operador" },
+          { id: 3, name: "Cliente" },
+        ])
+        
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching users:", error)
+        notificationService.showError("Error al cargar los usuarios")
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
-  // Filtrar usuarios por búsqueda
+  // Filter users by search term
   const filteredUsers = users.filter(
     (user) =>
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.apellido.toLowerCase().includes(searchTerm.toLowerCase()),
+      (user.Email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.Nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.Apellido || "").toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  // Paginación
+  // Pagination
   const indexOfLastUser = currentPage * usersPerPage
   const indexOfFirstUser = indexOfLastUser - usersPerPage
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser)
@@ -63,7 +76,7 @@ const UserManagement = () => {
   // Handlers
   const handleSearch = (e) => {
     e.preventDefault()
-    // La búsqueda ya se aplica automáticamente con el estado searchTerm
+    // Search is already applied automatically with the searchTerm state
   }
 
   const handleAddUser = () => {
@@ -86,164 +99,245 @@ const UserManagement = () => {
     setShowRoleModal(true)
   }
 
-  const handleToggleActive = (user) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedUsers = users.map((u) => {
-      if (u.id === user.id) {
-        return { ...u, activo: !u.activo }
+  const handleToggleStatus = async (user) => {
+    try {
+      setLoading(true)
+      await userService.changeUserStatus(user.IdUsuario, !user.Activo)
+      
+      // Refresh user list
+      const response = await userService.getAllUsers()
+      if (response.success && response.data) {
+        setUsers(response.data)
       }
-      return u
-    })
-    setUsers(updatedUsers)
-  }
-
-  const handleSaveUser = (userData) => {
-    if (currentUser) {
-      // Actualizar usuario existente
-      const updatedUsers = users.map((user) => (user.id === currentUser.id ? { ...user, ...userData } : user))
-      setUsers(updatedUsers)
-    } else {
-      // Crear nuevo usuario
-      const newUser = {
-        id: users.length + 1,
-        ...userData,
-        activo: true,
-      }
-      setUsers([...users, newUser])
+      
+      setLoading(false)
+    } catch (error) {
+      console.error("Error toggling user status:", error)
+      setLoading(false)
     }
-    setShowUserModal(false)
   }
 
-  const handleConfirmDelete = () => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedUsers = users.filter((user) => user.id !== currentUser.id)
-    setUsers(updatedUsers)
-    setShowDeleteModal(false)
-  }
-
-  const handleSaveRole = (roleId) => {
-    // En una aplicación real, esto llamaría a la API
-    const updatedUsers = users.map((user) => {
-      if (user.id === currentUser.id) {
-        return { ...user, idRol: roleId }
+  const handleSaveUser = async (userData) => {
+    try {
+      setLoading(true)
+      
+      if (currentUser) {
+        // Update existing user
+        await userService.updateUser(currentUser.IdUsuario, userData)
+      } else {
+        // Create new user
+        await userService.createUser(userData)
       }
-      return user
-    })
-    setUsers(updatedUsers)
-    setShowRoleModal(false)
+      
+      // Refresh user list
+      const response = await userService.getAllUsers()
+      if (response.success && response.data) {
+        setUsers(response.data)
+      }
+      
+      setShowUserModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error saving user:", error)
+      setLoading(false)
+    }
   }
 
-  const getRoleName = (roleId) => {
-    const role = roles.find((r) => r.id === roleId)
-    return role ? role.name : "Desconocido"
+  const handleConfirmDelete = async () => {
+    try {
+      setLoading(true)
+      
+      await userService.deleteUser(currentUser.IdUsuario)
+      
+      // Refresh user list
+      const response = await userService.getAllUsers()
+      if (response.success && response.data) {
+        setUsers(response.data)
+      }
+      
+      setShowDeleteModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      setLoading(false)
+    }
+  }
+
+  const handleSaveRole = async (roleId) => {
+    try {
+      setLoading(true)
+      
+      await userService.changeUserRole(currentUser.IdUsuario, roleId)
+      
+      // Refresh user list
+      const response = await userService.getAllUsers()
+      if (response.success && response.data) {
+        setUsers(response.data)
+      }
+      
+      setShowRoleModal(false)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error changing user role:", error)
+      setLoading(false)
+    }
+  }
+
+  // Render pagination controls
+  const renderPagination = () => {
+    if (totalPages <= 1) return null
+
+    return (
+      <div className="pagination">
+        <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          className="pagination-button"
+        >
+          &laquo;
+        </button>
+        <button
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-button"
+        >
+          &lsaquo;
+        </button>
+        <span className="pagination-info">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-button"
+        >
+          &rsaquo;
+        </button>
+        <button
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages}
+          className="pagination-button"
+        >
+          &raquo;
+        </button>
+      </div>
+    )
   }
 
   return (
     <div className="user-management">
-      <div className="user-actions">
-        <form className="search-bar" onSubmit={handleSearch}>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Buscar usuarios..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button type="submit" className="search-button">
-            <SearchIcon fontSize="small" />
-            Buscar
-          </button>
-        </form>
+      <div className="page-header">
+        <h1>
+          <AdminPanelSettingsIcon /> Gestión de Usuarios
+        </h1>
         <button className="add-button" onClick={handleAddUser}>
-          <AddIcon fontSize="small" />
-          Nuevo Usuario
+          <AddIcon /> Nuevo Usuario
         </button>
       </div>
 
+      <div className="search-bar">
+        <form onSubmit={handleSearch}>
+          <div className="search-input-container">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, apellido o email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="search-button">
+              <SearchIcon />
+            </button>
+          </div>
+        </form>
+      </div>
+
       {loading ? (
-        <p>Cargando usuarios...</p>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
       ) : (
         <>
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.nombre}</td>
-                  <td>{user.apellido}</td>
-                  <td>{user.email}</td>
-                  <td>{getRoleName(user.idRol)}</td>
-                  <td>
-                    <span className={`user-status ${user.activo ? "active" : "inactive"}`}>
-                      {user.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="user-actions-cell">
-                      <button className="action-button edit-button" onClick={() => handleEditUser(user)}>
-                        <EditIcon fontSize="small" />
-                        Editar
-                      </button>
-                      <button className="action-button delete-button" onClick={() => handleDeleteUser(user)}>
-                        <DeleteIcon fontSize="small" />
-                        Eliminar
-                      </button>
-                      <button
-                        className={`action-button ${user.activo ? "deactivate-button" : "activate-button"}`}
-                        onClick={() => handleToggleActive(user)}
-                      >
-                        {user.activo ? (
-                          <>
-                            <BlockIcon fontSize="small" />
-                            Desactivar
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircleIcon fontSize="small" />
-                            Activar
-                          </>
-                        )}
-                      </button>
-                      <button className="action-button role-button" onClick={() => handleChangeRole(user)}>
-                        <AdminPanelSettingsIcon fontSize="small" />
-                        Rol
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="no-data">
+                      No se encontraron usuarios
+                    </td>
+                  </tr>
+                ) : (
+                  currentUsers.map((user) => (
+                    <tr key={user.IdUsuario}>
+                      <td>{user.IdUsuario}</td>
+                      <td>{`${user.Nombre} ${user.Apellido}`}</td>
+                      <td>{user.Email}</td>
+                      <td>{user.Rol?.NombreRol || "Sin rol"}</td>
+                      <td>
+                        <span className={`status-badge ${user.Activo ? "active" : "inactive"}`}>
+                          {user.Activo ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="actions-cell">
+                        <button
+                          className="action-button edit"
+                          onClick={() => handleEditUser(user)}
+                          title="Editar usuario"
+                        >
+                          <EditIcon />
+                        </button>
+                        <button
+                          className="action-button delete"
+                          onClick={() => handleDeleteUser(user)}
+                          title="Eliminar usuario"
+                        >
+                          <DeleteIcon />
+                        </button>
+                        <button
+                          className="action-button role"
+                          onClick={() => handleChangeRole(user)}
+                          title="Cambiar rol"
+                        >
+                          <AdminPanelSettingsIcon />
+                        </button>
+                        <button
+                          className={`action-button ${user.Activo ? "deactivate" : "activate"}`}
+                          onClick={() => handleToggleStatus(user)}
+                          title={user.Activo ? "Desactivar usuario" : "Activar usuario"}
+                        >
+                          {user.Activo ? <BlockIcon /> : <CheckCircleIcon />}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`pagination-button ${currentPage === page ? "active" : ""}`}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          )}
+          {renderPagination()}
         </>
       )}
 
       {showUserModal && (
-        <UserModal user={currentUser} roles={roles} onSave={handleSaveUser} onClose={() => setShowUserModal(false)} />
+        <UserModal
+          user={currentUser}
+          roles={roles}
+          onSave={handleSaveUser}
+          onClose={() => setShowUserModal(false)}
+        />
       )}
 
       {showDeleteModal && (
@@ -258,7 +352,6 @@ const UserManagement = () => {
         <RoleModal
           user={currentUser}
           roles={roles}
-          currentRoleId={currentUser?.idRol}
           onSave={handleSaveRole}
           onClose={() => setShowRoleModal(false)}
         />
