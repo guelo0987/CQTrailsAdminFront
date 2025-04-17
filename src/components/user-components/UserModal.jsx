@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react"
 import CloseIcon from "@mui/icons-material/Close"
+import "../../../src/components/user-components/UserModal.css"
 
 const UserModal = ({ user, roles, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     email: "",
     nombre: "",
     apellido: "",
-    idRol: 0,
+    idRol: "",
     password: "",
   })
   const [errors, setErrors] = useState({})
@@ -19,17 +20,26 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
         email: user.email || "",
         nombre: user.nombre || "",
         apellido: user.apellido || "",
-        idRol: user.idRol || 0,
+        idRol: user.idRol || "",
         password: "", // No mostramos la contraseña actual
       })
+    } else {
+      // Reset form para nuevo usuario
+      setFormData({
+        email: "",
+        nombre: "",
+        apellido: "",
+        idRol: roles.length > 0 ? String(roles[0].IdRol) : "",
+        password: "",
+      })
     }
-  }, [user])
+  }, [user, roles])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: name === "idRol" ? Number.parseInt(value, 10) : value,
+      [name]: value,
     })
   }
 
@@ -50,6 +60,10 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
       newErrors.apellido = "El apellido es requerido"
     }
 
+    if (!formData.idRol) {
+      newErrors.idRol = "Debe seleccionar un rol"
+    }
+
     if (!user && !formData.password) {
       newErrors.password = "La contraseña es requerida para nuevos usuarios"
     } else if (formData.password && formData.password.length < 6) {
@@ -64,9 +78,17 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
     e.preventDefault()
 
     if (validateForm()) {
-      onSave(formData)
+      // Asegurar que idRol sea numérico al guardarlo
+      const dataToSave = {
+        ...formData,
+        idRol: formData.idRol ? parseInt(formData.idRol, 10) : null
+      };
+      onSave(dataToSave)
     }
   }
+
+  // Verificar que hay roles disponibles
+  console.log("Roles disponibles:", roles);
 
   return (
     <div className="modal-backdrop">
@@ -120,13 +142,24 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
 
             <div className="form-group">
               <label htmlFor="idRol">Rol</label>
-              <select id="idRol" name="idRol" value={formData.idRol} onChange={handleChange}>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
+              <select 
+                id="idRol" 
+                name="idRol" 
+                value={formData.idRol} 
+                onChange={handleChange}
+              >
+                <option value="">Seleccione un rol</option>
+                {roles && roles.length > 0 ? (
+                  roles.map((role) => (
+                    <option key={role.IdRol} value={String(role.IdRol)}>
+                      {role.NombreRol}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No hay roles disponibles</option>
+                )}
               </select>
+              {errors.idRol && <span className="error-message">{errors.idRol}</span>}
             </div>
 
             <div className="form-group">

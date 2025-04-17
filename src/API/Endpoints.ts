@@ -32,8 +32,20 @@ export const endpoints = {
         update: (id: number) => `usuarios/${id}`,
         delete: (id: number) => `usuarios/${id}`,
         changeRole: (id: number) => `usuarios/${id}/rol`,
-        changeStatus: (id: number) => `usuarios/${id}/activacion`,
+        // Separate endpoints for activate and deactivate
+        activate: (id: number) => `usuarios/${id}/activar`,
+        deactivate: (id: number) => `usuarios/${id}/desactivar`,
         changePassword: (id: number) => `usuarios/${id}/password`,
+    },
+
+    roles: {
+        list: 'roles',
+        porId: (id: number) => `roles/${id}`,
+        create: 'roles',
+        update: (id: number) => `roles/${id}`,
+        delete: (id: number) => `roles/${id}`,
+        addPermission: (roleId: number, permissionId: number) => `roles/${roleId}/permisos/${permissionId}`,
+        removePermission: (roleId: number, permissionId: number) => `roles/${roleId}/permisos/${permissionId}`,
     },
 
     vehicles:{

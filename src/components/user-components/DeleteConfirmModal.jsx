@@ -1,5 +1,8 @@
 "use client"
+
 import CloseIcon from "@mui/icons-material/Close"
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever"
+import "../user-components/UserModal.css" // Reutilizamos los estilos generales
 
 const DeleteConfirmModal = ({ user, onConfirm, onClose }) => {
   return (
@@ -12,20 +15,18 @@ const DeleteConfirmModal = ({ user, onConfirm, onClose }) => {
           </button>
         </div>
         <div className="modal-body">
-          <p>
-            ¿Estás seguro de que deseas eliminar al usuario{" "}
-            <strong>
-              {user.nombre} {user.apellido}
-            </strong>
-            ?
-          </p>
-          <p>Esta acción no se puede deshacer.</p>
+          <div className="delete-warning">
+            <DeleteForeverIcon className="delete-icon" />
+            <p>¿Estás seguro de que deseas eliminar al usuario:</p>
+            <p className="user-to-delete">{user?.Nombre} {user?.Apellido}</p>
+            <p className="delete-warning-text">Esta acción no se puede deshacer.</p>
+          </div>
         </div>
         <div className="modal-footer">
-          <button type="button" className="modal-cancel" onClick={onClose}>
+          <button className="modal-cancel" onClick={onClose}>
             Cancelar
           </button>
-          <button type="button" className="modal-submit modal-danger" onClick={onConfirm}>
+          <button className="modal-delete" onClick={onConfirm}>
             Eliminar
           </button>
         </div>

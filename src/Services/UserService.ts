@@ -132,7 +132,19 @@ class UserService {
      */
     async updateUser(id: number, user: User) {
         try {
-            const response = await axiosInstance.put(`${this.baseURL}${endpoints.users.update(id)}`, user);
+            // Asegurarse de que los campos tengan el formato adecuado
+            const userData = {
+                Nombre: user.nombre,
+                Apellido: user.apellido,
+                Email: user.email,
+                IdRol: user.idRol
+                // No incluir campos sensibles como contraseña aquí
+            };
+
+            console.log(`Enviando datos para actualizar usuario ID ${id}:`, userData);
+
+            // Utilizar formato de datos JSON adecuado para la API
+            const response = await axiosInstance.put(`${this.baseURL}${endpoints.users.update(id)}`, userData);
             notificationService.showSuccess('Usuario actualizado exitosamente');
             return response.data;
         } catch (error) {
@@ -169,15 +181,64 @@ class UserService {
      */
     async changeUserRole(id: number, roleId: number) {
         try {
-            const response = await axiosInstance.patch(`${this.baseURL}${endpoints.users.changeRole(id)}`, {
+            console.log(`Cambiando rol del usuario ${id} a ${roleId}`);
+            // Ajustar el formato de datos y método de acuerdo a la API
+            // Primer intento: endpoint específico para cambiar rol
+            const response = await axiosInstance.put(`${this.baseURL}${endpoints.users.changeRole(id)}`, {
                 idRol: roleId
             });
             notificationService.showSuccess('Rol de usuario actualizado exitosamente');
             return response.data;
         } catch (error) {
-            console.error(`Error changing role for user with ID ${id}:`, error);
-            const errorMessage = error.response?.data?.message || 'Error al cambiar el rol del usuario';
-            notificationService.showError(errorMessage);
+            // Intentar con otro método si el primero falla
+            try {
+                console.log("Primer método falló. Intentando método alternativo para cambiar rol...");
+                // Actualizar usuario completo para cambiar el rol
+                const userData = {
+                    IdRol: roleId
+                };
+                const response = await axiosInstance.put(`${this.baseURL}${endpoints.users.update(id)}`, userData);
+                notificationService.showSuccess('Rol de usuario actualizado exitosamente');
+                return response.data;
+            } catch (secondError) {
+                console.error(`Error changing role for user with ID ${id}:`, error);
+                const errorMessage = error.response?.data?.message || 'Error al cambiar el rol del usuario';
+                notificationService.showError(errorMessage);
+                throw error;
+            }
+        }
+    }
+
+    /**
+     * Get clients with optional query parameters (usuarios con rol Cliente)
+     * @param params Query parameters (skip, limit, activo)
+     * @returns Promise with clients list
+     */
+    async getClients(params: UserQueryParams = { skip: 0, limit: 100, activo: true }) {
+        try {
+            // Build query string from params
+            const queryParams = new URLSearchParams();
+            
+            if (params.skip !== undefined) {
+                queryParams.append('skip', params.skip.toString());
+            }
+            
+            if (params.limit !== undefined) {
+                queryParams.append('limit', params.limit.toString());
+            }
+            
+            if (params.activo !== undefined) {
+                queryParams.append('activo', params.activo.toString());
+            }
+            
+            const queryString = queryParams.toString();
+            const url = `${this.baseURL}${endpoints.users.list}${queryString ? `?${queryString}` : ''}`;
+            
+            console.log("Obteniendo clientes desde:", url);
+            const response = await axiosInstance.get(url);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching clients:', error);
             throw error;
         }
     }
@@ -190,15 +251,24 @@ class UserService {
      */
     async changeUserStatus(id: number, isActive: boolean) {
         try {
-            const response = await axiosInstance.patch(`${this.baseURL}${endpoints.users.changeStatus(id)}`, {
-                activo: isActive
-            });
+            // Seleccionar el endpoint correcto según si queremos activar o desactivar
+            const endpoint = isActive 
+                ? endpoints.users.activate(id) 
+                : endpoints.users.deactivate(id);
+                
+            const url = `${this.baseURL}${endpoint}`;
+            
+            console.log(`Cambiando estado del usuario ${id} a ${isActive ? 'activado' : 'desactivado'} usando URL: ${url}`);
+            
+            // La API espera un método PATCH sin cuerpo para estos endpoints
+            const response = await axiosInstance.patch(url);
+            
             const statusMessage = isActive ? 'activado' : 'desactivado';
             notificationService.showSuccess(`Usuario ${statusMessage} exitosamente`);
             return response.data;
         } catch (error) {
             console.error(`Error changing status for user with ID ${id}:`, error);
-            const errorMessage = error.response?.data?.message || 'Error al cambiar el estado del usuario';
+            const errorMessage = error.response?.data?.message || `Error al ${isActive ? 'activar' : 'desactivar'} el usuario`;
             notificationService.showError(errorMessage);
             throw error;
         }

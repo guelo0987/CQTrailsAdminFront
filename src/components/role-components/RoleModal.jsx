@@ -2,102 +2,74 @@
 
 import { useState, useEffect } from "react"
 import CloseIcon from "@mui/icons-material/Close"
+import "../user-components/UserModal.css" // Reutilizamos los estilos del UserModal
 
-const RoleModal = ({ role, onSave, onClose }) => {
-  const [formData, setFormData] = useState({
-    NombreRol: "",
-    Descripcion: "",
-  })
-  const [errors, setErrors] = useState({})
+const RoleModal = ({ user, roles, onSave, onClose }) => {
+  const [selectedRoleId, setSelectedRoleId] = useState("")
 
   useEffect(() => {
-    if (role) {
-      setFormData({
-        NombreRol: role.NombreRol || "",
-        Descripcion: role.Descripcion || "",
-      })
+    // Inicializar con el rol actual del usuario
+    if (user && user.IdRol) {
+      setSelectedRoleId(user.IdRol.toString())
     }
-  }, [role])
+  }, [user])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-  }
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.NombreRol.trim()) {
-      newErrors.NombreRol = "El nombre del rol es requerido"
-    } else if (formData.NombreRol.length > 20) {
-      newErrors.NombreRol = "El nombre del rol no puede exceder los 20 caracteres"
-    }
-
-    if (formData.Descripcion && formData.Descripcion.length > 200) {
-      newErrors.Descripcion = "La descripción no puede exceder los 200 caracteres"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setSelectedRoleId(e.target.value);
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-
-    if (validateForm()) {
-      onSave(formData)
-    }
+    onSave(parseInt(selectedRoleId, 10))
   }
+
+  // Verificar que hay roles disponibles
+  console.log("Roles disponibles en RoleModal:", roles);
 
   return (
     <div className="modal-backdrop">
       <div className="modal">
         <div className="modal-header">
-          <h2 className="modal-title">{role ? "Editar Rol" : "Nuevo Rol"}</h2>
+          <h2 className="modal-title">Cambiar Rol de Usuario</h2>
           <button className="modal-close" onClick={onClose}>
             <CloseIcon />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            <p>Selecciona un nuevo rol para <strong>{user?.Nombre} {user?.Apellido}</strong></p>
+            
             <div className="form-group">
-              <label htmlFor="NombreRol">Nombre del Rol</label>
-              <input
-                id="NombreRol"
-                name="NombreRol"
-                type="text"
-                value={formData.NombreRol}
+              <label htmlFor="role">Rol:</label>
+              <select
+                id="role"
+                value={selectedRoleId}
                 onChange={handleChange}
-                placeholder="Ej: Administrador"
-                maxLength={20}
-              />
-              {errors.NombreRol && <span className="error-message">{errors.NombreRol}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="Descripcion">Descripción</label>
-              <textarea
-                id="Descripcion"
-                name="Descripcion"
-                value={formData.Descripcion}
-                onChange={handleChange}
-                placeholder="Describe las funciones y responsabilidades de este rol"
-                rows={4}
-                maxLength={200}
-              ></textarea>
-              {errors.Descripcion && <span className="error-message">{errors.Descripcion}</span>}
-              <div className="character-count">{formData.Descripcion ? formData.Descripcion.length : 0}/200</div>
+                className="role-select"
+              >
+                <option value="">Selecciona un rol</option>
+                {roles && roles.length > 0 ? (
+                  roles.map(role => (
+                    <option key={role.IdRol} value={String(role.IdRol)}>
+                      {role.NombreRol}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No hay roles disponibles</option>
+                )}
+              </select>
             </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="modal-cancel" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="modal-submit">
-              {role ? "Actualizar" : "Crear"}
+            <button 
+              type="submit" 
+              className="modal-submit"
+              disabled={!selectedRoleId}
+            >
+              Guardar Cambios
             </button>
           </div>
         </form>
