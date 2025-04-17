@@ -12,6 +12,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import LocationOnIcon from "@mui/icons-material/LocationOn"
 import { reservationService } from "../Services/ReservationService"
 import { notificationService } from "../Utils/notificationService"
+import "./ReservationManagement.css"
 
 const ReservationManagement = () => {
   const [reservations, setReservations] = useState([])
@@ -99,11 +100,8 @@ const ReservationManagement = () => {
       // Get detailed reservation data
       const response = await reservationService.getReservationById(reservation.IdReservacion)
       if (response.success && response.data) {
-        // Add a default Total property if it doesn't exist
-        setCurrentReservation({
-          ...response.data,
-          Total: response.data.Total || 0
-        });
+        // Set the current reservation with all the data from the API
+        setCurrentReservation(response.data);
       } else {
         setCurrentReservation(reservation)
       }
@@ -173,10 +171,13 @@ const ReservationManagement = () => {
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
       case "completada":
+      case "aprobada":
+      case "aceptada":
         return "status-completed"
       case "pendiente":
         return "status-pending"
       case "rechazada":
+      case "denegada":
         return "status-rejected"
       default:
         return ""
@@ -255,102 +256,76 @@ const ReservationManagement = () => {
   }
 
   return (
-    <div className="reservation-management">
-      <div className="reservation-actions">
-        <form className="search-bar" onSubmit={handleSearch}>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Buscar reservaciones..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button type="submit" className="search-button">
-            <SearchIcon fontSize="small" />
-            Buscar
-          </button>
-        </form>
+    <div className="reservation-management-container">
+      <div className="page-header">
+        <h1>
+          <EventIcon style={{ color: "#2e7d32" }} /> Gestión de Reservaciones
+        </h1>
+      </div>
 
-        <div className="action-buttons">
-          <button 
-            className="filter-toggle-button" 
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FilterListIcon fontSize="small" />
-            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
-          </button>
+      <div className="actions-container">
+        <div className="search-bar">
+          <form onSubmit={handleSearch}>
+            <div className="search-input-container">
+              <input
+                type="text"
+                placeholder="Buscar por cliente, empresa, origen o destino..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+              <button type="submit" className="search-button">
+                <SearchIcon />
+              </button>
+            </div>
+          </form>
         </div>
+
+        <button
+          className="filter-toggle-button"
+          onClick={() => setShowFilters(!showFilters)}
+          style={{ backgroundColor: "#e8f5e9", color: "#2e7d32", borderColor: "#81c784" }}
+        >
+          <FilterListIcon /> Filtros
+        </button>
       </div>
 
       {showFilters && (
-        <div className="vehicle-filters">
-          <div className="filters-header">
-            <h3>Filtros de búsqueda</h3>
-            <button 
-              className="reset-filters-button"
-              onClick={() => {
-                setStatusFilter("all");
-                setCityFilter("all");
-                // Reload all reservations
-                const fetchAllReservations = async () => {
-                  try {
-                    setLoading(true)
-                    const response = await reservationService.getReservations()
-                    if (response.success && response.data) {
-                      setReservations(response.data)
-                    }
-                    setLoading(false)
-                  } catch (error) {
-                    console.error("Error fetching all reservations:", error)
-                    notificationService.showError("Error al cargar las reservaciones")
-                    setLoading(false)
-                  }
-                }
-                fetchAllReservations()
-              }}
+        <div className="filters-container" style={{ backgroundColor: "#f8f8f8", borderTop: "2px solid #81c784", borderBottom: "2px solid #81c784" }}>
+          <div className="filter-group">
+            <label className="filter-label" style={{ color: "#2e7d32" }}>Estado:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusFilterChange(e.target.value)}
+              className="filter-select"
+              style={{ borderColor: "#81c784" }}
             >
-              Restablecer filtros
-            </button>
+              <option value="all">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobada">Aprobada</option>
+              <option value="denegada">Denegada</option>
+            </select>
           </div>
 
-          <div className="filters-grid">
-            <div className="filter-group">
-              <label>
-                <FilterListIcon fontSize="small" />
-                Estado de la reservación
-              </label>
-              <select 
-                value={statusFilter} 
-                onChange={(e) => handleStatusFilterChange(e.target.value)}
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pendiente">Pendientes</option>
-                <option value="completada">Completadas</option>
-                <option value="rechazada">Rechazadas</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>
-                <LocationOnIcon fontSize="small" />
-                Ciudad
-              </label>
-              <select 
-                value={cityFilter} 
-                onChange={(e) => handleCityFilterChange(e.target.value)}
-              >
-                <option value="all">Todas las ciudades</option>
-                {cities.map((city) => (
-                  <option key={city.IdCiudad} value={city.IdCiudad}>
-                    {city.Nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="filter-group">
+            <label className="filter-label" style={{ color: "#2e7d32" }}>Ciudad:</label>
+            <select
+              value={cityFilter}
+              onChange={(e) => handleCityFilterChange(e.target.value)}
+              className="filter-select"
+              style={{ borderColor: "#81c784" }}
+            >
+              <option value="all">Todas</option>
+              {cities.map((city) => (
+                <option key={city.IdCiudad} value={city.IdCiudad}>
+                  {city.Nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {filteredReservations.length > 0 && (
-            <div className="results-summary">
+            <div className="results-summary" style={{ color: "#2e7d32", fontWeight: "500" }}>
               Se encontraron {filteredReservations.length} reservaciones
             </div>
           )}
@@ -358,12 +333,15 @@ const ReservationManagement = () => {
       )}
 
       {loading ? (
-        <p>Cargando reservaciones...</p>
+        <div className="loading-container" style={{ color: "#2e7d32" }}>
+          <div className="loading-spinner" style={{ borderTopColor: "#2e7d32" }}></div>
+          <p>Cargando reservaciones...</p>
+        </div>
       ) : (
         <>
-          <table className="reservations-table">
+          <table className="reservations-table" style={{ borderCollapse: "collapse", width: "100%", marginTop: "20px" }}>
             <thead>
-              <tr>
+              <tr style={{ backgroundColor: "#ffffff", color: "white" }}>
                 <th>ID</th>
                 <th>Cliente</th>
                 <th>Empresa</th>
@@ -379,34 +357,38 @@ const ReservationManagement = () => {
             {/* Table rendering section */}
             <tbody>
               {currentReservations.length > 0 ? (
-                currentReservations.map((reservation) => (
-                  <tr key={reservation.IdReservacion}>
+                currentReservations.map((reservation, index) => (
+                  <tr key={reservation.IdReservacion} style={{ backgroundColor: index % 2 === 0 ? "#f8f8f8" : "white", borderBottom: "1px solid #e0e0e0" }}>
                     <td>{reservation.IdReservacion}</td>
                     <td>
-                      {reservation.Usuarios1 ? `${reservation.Usuarios1.nombre} ${reservation.Usuarios1.apellido}` : "N/A"}
+                      {reservation.Usuario 
+                        ? `${reservation.Usuario.Nombre} ${reservation.Usuario.Apellido}` 
+                        : (reservation.Usuarios1 
+                            ? `${reservation.Usuarios1.nombre} ${reservation.Usuarios1.apellido}` 
+                            : "N/A")}
                     </td>
-                    <td>{reservation.Empresas1?.Nombre || "N/A"}</td>
+                    <td>{reservation.Empresa?.Nombre || reservation.Empresas1?.Nombre || "N/A"}</td>
                     <td>
                       <div className="city-cell">
-                        <LocationOnIcon fontSize="small" className="city-icon" />
+                        <LocationOnIcon fontSize="small" className="city-icon" style={{ color: "#43a047" }} />
                         {reservation.CiudadInicio?.Nombre || "N/A"}
                       </div>
                     </td>
                     <td>
                       <div className="city-cell">
-                        <LocationOnIcon fontSize="small" className="city-icon" />
+                        <LocationOnIcon fontSize="small" className="city-icon" style={{ color: "#43a047" }} />
                         {reservation.CiudadFin?.Nombre || "N/A"}
                       </div>
                     </td>
                     <td>
                       <div className="date-cell">
-                        <CalendarMonthIcon fontSize="small" className="date-icon" />
+                        <CalendarMonthIcon fontSize="small" className="date-icon" style={{ color: "#43a047" }} />
                         {formatDate(reservation.FechaInicio)}
                       </div>
                     </td>
                     <td>
                       <div className="date-cell">
-                        <EventIcon fontSize="small" className="date-icon" />
+                        <EventIcon fontSize="small" className="date-icon" style={{ color: "#43a047" }} />
                         {formatDate(reservation.FechaFin)}
                       </div>
                     </td>
@@ -415,13 +397,14 @@ const ReservationManagement = () => {
                         {reservation.Estado}
                       </span>
                     </td>
-                    <td className="price-cell">${reservation.Total?.toLocaleString() || "0"}</td>
+                    <td className="price-cell" style={{ fontWeight: "bold", color: "#2e7d32" }}>${reservation.Total?.toLocaleString() || "0"}</td>
                     <td>
                       <div className="reservation-actions-cell">
                         <button
                           className="action-button view-button"
                           onClick={() => handleViewDetails(reservation)}
                           title="Ver detalles"
+                          style={{ backgroundColor: "#e8f5e9", color: "#2e7d32", border: "1px solid #c8e6c9" }}
                         >
                           <VisibilityIcon fontSize="small" />
                           Detalles
@@ -430,6 +413,7 @@ const ReservationManagement = () => {
                           className="action-button edit-button"
                           onClick={() => handleChangeStatus(reservation)}
                           title="Cambiar estado"
+                          style={{ backgroundColor: "#f0f0f0", color: "#424242", border: "1px solid #e0e0e0" }}
                         >
                           <EditIcon fontSize="small" />
                           Estado
@@ -440,7 +424,7 @@ const ReservationManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="no-data-message">
+                  <td colSpan="10" className="no-data-message" style={{ padding: "20px", textAlign: "center", color: "#757575" }}>
                     No se encontraron reservaciones
                   </td>
                 </tr>
@@ -449,12 +433,20 @@ const ReservationManagement = () => {
           </table>
 
           {totalPages > 1 && (
-            <div className="pagination">
+            <div className="pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "5px" }}>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   className={`pagination-button ${currentPage === page ? "active" : ""}`}
                   onClick={() => setCurrentPage(page)}
+                  style={{ 
+                    padding: "8px 12px", 
+                    border: "1px solid #e0e0e0", 
+                    backgroundColor: currentPage === page ? "#2e7d32" : "#f5f5f5",
+                    color: currentPage === page ? "white" : "#333",
+                    cursor: "pointer",
+                    borderRadius: "4px"
+                  }}
                 >
                   {page}
                 </button>
