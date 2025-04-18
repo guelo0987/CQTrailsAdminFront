@@ -124,20 +124,12 @@ const ReservationManagement = () => {
     try {
       setLoading(true)
       
-      if (newStatus === "Completada") {
-        // Approve reservation
-        await reservationService.approveReservation(currentReservation.IdReservacion, {
-          mensaje: "Reservación aprobada por administrador"
-        })
-      } else if (newStatus === "Rechazada") {
-        // Reject reservation
-        await reservationService.rejectReservation(currentReservation.IdReservacion, {
-          motivo: motivoRechazo
-        })
-      } else {
-        // Update status (for Pendiente or other statuses)
-        await reservationService.updateReservationStatus(currentReservation.IdReservacion, newStatus)
-      }
+      // Use the new changeReservationStatus endpoint
+      await reservationService.changeReservationStatus(
+        currentReservation.IdReservacion, 
+        newStatus, 
+        motivoRechazo
+      );
       
       // Refresh reservations list
       const response = await reservationService.getReservations()
@@ -170,13 +162,10 @@ const ReservationManagement = () => {
   // Get status class for styling
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
-      case "completada":
       case "aprobada":
-      case "aceptada":
         return "status-completed"
       case "pendiente":
         return "status-pending"
-      case "rechazada":
       case "denegada":
         return "status-rejected"
       default:
@@ -360,7 +349,7 @@ const ReservationManagement = () => {
                 currentReservations.map((reservation, index) => (
                   <tr key={reservation.IdReservacion} style={{ backgroundColor: index % 2 === 0 ? "#f8f8f8" : "white", borderBottom: "1px solid #e0e0e0" }}>
                     <td>{reservation.IdReservacion}</td>
-                    <td>
+                    <td style={{ fontWeight: "500" }}>
                       {reservation.Usuario 
                         ? `${reservation.Usuario.Nombre} ${reservation.Usuario.Apellido}` 
                         : (reservation.Usuarios1 
@@ -404,7 +393,6 @@ const ReservationManagement = () => {
                           className="action-button view-button"
                           onClick={() => handleViewDetails(reservation)}
                           title="Ver detalles"
-                          style={{ backgroundColor: "#e8f5e9", color: "#2e7d32", border: "1px solid #c8e6c9" }}
                         >
                           <VisibilityIcon fontSize="small" />
                           Detalles
@@ -413,7 +401,6 @@ const ReservationManagement = () => {
                           className="action-button edit-button"
                           onClick={() => handleChangeStatus(reservation)}
                           title="Cambiar estado"
-                          style={{ backgroundColor: "#f0f0f0", color: "#424242", border: "1px solid #e0e0e0" }}
                         >
                           <EditIcon fontSize="small" />
                           Estado

@@ -22,14 +22,11 @@ const ReservationDetailModal = ({ reservation, onClose, formatDate }) => {
 
   // Helper function to get status class
   const getStatusClass = (status) => {
-    switch (status?.toLowerCase()) {
-      case "completada":
+    switch (status.toLowerCase()) {
       case "aprobada":
-      case "aceptada":
         return "status-completed"
       case "pendiente":
         return "status-pending"
-      case "rechazada":
       case "denegada":
         return "status-rejected"
       default:
@@ -181,7 +178,7 @@ const ReservationDetailModal = ({ reservation, onClose, formatDate }) => {
                 </div>
               )}
 
-              {(reservation.Estado === "Denegada" || reservation.Estado === "Rechazada") && reservation.MotivoRechazo && (
+              {(reservation.Estado === "Denegada") && reservation.MotivoRechazo && (
                 <div className="reservation-detail-section rejection-section">
                   <div className="detail-section-title rejection-title">
                     <InfoIcon /> Motivo de Rechazo

@@ -80,6 +80,8 @@ export const endpoints = {
             }
             return query;
         },
-        update: (id: number) => `reservaciones/${id}`
+        update: (id: number) => `reservaciones/${id}`,
+        // Updated endpoint for changing reservation status
+        changeStatus: (id: number) => `reservaciones/${id}/cambiar-estado`
     },
 }

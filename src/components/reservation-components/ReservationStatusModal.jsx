@@ -15,7 +15,7 @@ const ReservationStatusModal = ({ reservation, onSave, onClose }) => {
     e.preventDefault()
 
     // Validar si se requiere motivo de rechazo
-    if (selectedStatus === "Rechazada" && !motivoRechazo.trim()) {
+    if (selectedStatus === "Denegada" && !motivoRechazo.trim()) {
       setErrors({ motivoRechazo: "El motivo de rechazo es requerido" })
       return
     }
@@ -54,33 +54,33 @@ const ReservationStatusModal = ({ reservation, onSave, onClose }) => {
                   <span>Pendiente</span>
                 </label>
 
-                <label className={`status-option ${selectedStatus === "Completada" ? "selected" : ""}`}>
+                <label className={`status-option ${selectedStatus === "Aprobada" ? "selected" : ""}`}>
                   <input
                     type="radio"
                     name="status"
-                    value="Completada"
-                    checked={selectedStatus === "Completada"}
-                    onChange={() => setSelectedStatus("Completada")}
+                    value="Aprobada"
+                    checked={selectedStatus === "Aprobada"}
+                    onChange={() => setSelectedStatus("Aprobada")}
                   />
                   <CheckCircleIcon />
-                  <span>Aceptada</span>
+                  <span>Aprobada</span>
                 </label>
 
-                <label className={`status-option ${selectedStatus === "Rechazada" ? "selected" : ""}`}>
+                <label className={`status-option ${selectedStatus === "Denegada" ? "selected" : ""}`}>
                   <input
                     type="radio"
                     name="status"
-                    value="Rechazada"
-                    checked={selectedStatus === "Rechazada"}
-                    onChange={() => setSelectedStatus("Rechazada")}
+                    value="Denegada"
+                    checked={selectedStatus === "Denegada"}
+                    onChange={() => setSelectedStatus("Denegada")}
                   />
                   <CancelIcon />
-                  <span>Rechazada</span>
+                  <span>Denegada</span>
                 </label>
               </div>
             </div>
 
-            {selectedStatus === "Rechazada" && (
+            {selectedStatus === "Denegada" && (
               <div className="form-group">
                 <label htmlFor="motivoRechazo">Motivo de Rechazo</label>
                 <textarea
@@ -99,7 +99,7 @@ const ReservationStatusModal = ({ reservation, onSave, onClose }) => {
             <button type="button" className="modal-cancel" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className={`modal-submit ${selectedStatus === "Rechazada" ? "modal-danger" : ""}`}>
+            <button type="submit" className={`modal-submit ${selectedStatus === "Denegada" ? "modal-danger" : ""}`}>
               Guardar Cambios
             </button>
           </div>

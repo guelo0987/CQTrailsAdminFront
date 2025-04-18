@@ -58,6 +58,12 @@ interface WeeklyReservationsData {
   }[];
 }
 
+// Add this interface for the status change request
+interface StatusChangeRequest {
+    estado: string;
+    motivo_rechazo?: string;
+}
+
 class ReservationService {
     private baseURL: string;
 
@@ -264,7 +270,7 @@ class ReservationService {
                 `${this.baseURL}${endpoints.reservations.reject(id)}`, 
                 rejectionData
             );
-            notificationService.showSuccess('Reservación rechazada exitosamente');
+            notificationService.showSuccess('Reservación denegada exitosamente');
             return response.data;
         } catch (error) {
             console.error(`Error rejecting reservation with ID ${id}:`, error);
@@ -362,6 +368,39 @@ class ReservationService {
             return response.data;
         } catch (error) {
             console.error(`Error fetching reservations by city:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Changes the status of a reservation
+     * @param id Reservation ID
+     * @param newStatus New status to set
+     * @param motivoRechazo Optional reason for the status change (required for rejection)
+     * @returns API response
+     */
+    async changeReservationStatus(id: number, newStatus: string, motivoRechazo?: string) {
+        try {
+            const data: StatusChangeRequest = {
+                estado: newStatus
+            };
+            
+            // Add reason if provided (required for rejection)
+            if (motivoRechazo) {
+                data.motivo_rechazo = motivoRechazo;
+            }
+            
+            const response = await axiosInstance.post(
+                `${this.baseURL}${endpoints.reservations.changeStatus(id)}`, 
+                data
+            );
+            
+            notificationService.showSuccess(`Estado de reservación actualizado a: ${newStatus}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error changing status for reservation with ID ${id}:`, error);
+            const errorMessage = error.response?.data?.message || 'Error al cambiar el estado de la reservación';
+            notificationService.showError(errorMessage);
             throw error;
         }
     }
