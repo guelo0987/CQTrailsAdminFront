@@ -132,7 +132,7 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
         </div>
         
         <div className="modal-description">
-          <InfoIcon fontSize="small" style={{ marginRight: '8px', color: '#3498db' }} />
+          <InfoIcon fontSize="small" style={{ marginRight: '8px', color: '#2D9C5F' }} />
           <span>Configure los permisos para este rol. Cada permiso puede tener acciones de Leer, Crear, Editar y Eliminar.</span>
         </div>
         
@@ -289,7 +289,7 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
         </div>
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{__html: `
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -301,6 +301,7 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
           align-items: center;
           justify-content: center;
           z-index: 1000;
+          backdrop-filter: blur(2px);
         }
 
         .permissions-modal {
@@ -308,16 +309,17 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
           max-width: 800px;
           max-height: 90vh;
           background-color: #fff;
-          border-radius: 8px;
-          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
           display: flex;
           flex-direction: column;
           overflow: hidden;
+          font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .modal-header {
-          padding: 16px 24px;
-          background-color: #3498db;
+          padding: 20px 24px;
+          background: linear-gradient(135deg, #34a853 0%, #2D9C5F 100%);
           color: white;
           display: flex;
           justify-content: space-between;
@@ -332,7 +334,9 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
 
         .modal-title h2 {
           margin: 0;
-          font-size: 1.5rem;
+          font-size: 22px;
+          font-weight: 400;
+          letter-spacing: 0.3px;
         }
 
         .modal-icon {
@@ -344,12 +348,12 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
           border: none;
           color: white;
           cursor: pointer;
-          padding: 4px;
+          padding: 8px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background-color 0.3s;
+          transition: background-color 0.2s;
         }
 
         .close-button:hover {
@@ -358,25 +362,46 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
 
         .modal-description {
           padding: 16px 24px;
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
+          background-color: #fafafa;
+          border-bottom: 1px solid #f0f0f0;
           display: flex;
           align-items: center;
+          color: #555;
+          font-size: 14px;
         }
 
         .permissions-search {
           padding: 16px 24px;
-          border-bottom: 1px solid #e9ecef;
+          border-bottom: 1px solid #f0f0f0;
+          background-color: white;
+        }
+
+        .search-input .MuiOutlinedInput-root {
+          border-radius: 6px;
+        }
+
+        .search-input .MuiOutlinedInput-notchedOutline {
+          border-color: #e0e0e0;
+        }
+
+        .search-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+          border-color: #2D9C5F;
+        }
+
+        .search-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: #2D9C5F;
         }
 
         .permissions-container {
           flex: 1;
           overflow-y: auto;
           padding: 0;
+          background-color: #fafafa;
         }
 
         .permission-section {
-          border-bottom: 1px solid #e9ecef;
+          border-bottom: 1px solid #f0f0f0;
+          background-color: white;
         }
 
         .permission-section-header {
@@ -389,7 +414,7 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
         }
 
         .permission-section-header:hover {
-          background-color: #f8f9fa;
+          background-color: #f8f8f8;
         }
 
         .permission-section-title {
@@ -400,58 +425,86 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
 
         .permission-section-title h3 {
           margin: 0;
-          font-size: 1.2rem;
+          font-size: 16px;
+          font-weight: 500;
+          color: #333;
         }
 
         .section-icon {
-          color: #3498db;
+          color: #2D9C5F;
+          font-size: 20px;
+        }
+
+        .permission-section-summary {
+          color: #2D9C5F;
+          font-size: 14px;
         }
 
         .permission-items {
           padding: 0 24px 16px;
+          background-color: #fafafa;
         }
 
         .permission-card {
-          background-color: #f8f9fa;
+          background-color: white;
           border-radius: 8px;
           padding: 16px;
           margin-bottom: 12px;
-          border: 1px solid #e9ecef;
+          border: none;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .permission-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
 
         .permission-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
         }
 
         .permission-header h4 {
           margin: 0;
-          font-size: 1.1rem;
+          font-size: 15px;
+          color: #333;
+          font-weight: 500;
         }
 
         .permission-badge {
-          background-color: #3498db;
+          background-color: #2D9C5F;
           color: white;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 0.8rem;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
         }
 
         .permission-toggles {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+          .permission-toggles {
+            flex-direction: column;
+            gap: 8px;
+          }
         }
 
         .permission-active {
           font-weight: 500;
+          color: #2D9C5F;
         }
 
         .permission-inactive {
           opacity: 0.7;
+          color: #777;
         }
 
         .permission-actions {
@@ -459,15 +512,80 @@ const RolePermissionsModal = ({ role, allPermissions, rolePermissions, onSave, o
           justify-content: flex-end;
         }
 
+        /* Estilo para los botones */
+        .toggle-all-button.MuiButton-root {
+          text-transform: none;
+          font-size: 13px;
+          border-radius: 4px;
+          padding: 4px 12px;
+        }
+
         .modal-footer {
           padding: 16px 24px;
-          background-color: #f8f9fa;
+          background-color: #fafafa;
           display: flex;
           justify-content: flex-end;
           gap: 12px;
-          border-top: 1px solid #e9ecef;
+          border-top: 1px solid #f0f0f0;
         }
-      `}</style>
+
+        .cancel-button.MuiButton-root {
+          text-transform: none;
+          color: #555;
+          border-color: #e0e0e0;
+          border-radius: 4px;
+        }
+
+        .cancel-button.MuiButton-root:hover {
+          background-color: #f5f5f5;
+          border-color: #d0d0d0;
+        }
+
+        .save-button.MuiButton-root {
+          text-transform: none;
+          background-color: #2D9C5F;
+          border-radius: 4px;
+          box-shadow: 0 2px 4px rgba(45, 156, 95, 0.2);
+        }
+
+        .save-button.MuiButton-root:hover {
+          background-color: #259352;
+          box-shadow: 0 4px 8px rgba(45, 156, 95, 0.2);
+        }
+
+        /* Ajustes para los Switch de Material UI */
+        .MuiSwitch-colorPrimary.Mui-checked {
+          color: #2D9C5F !important;
+        }
+        
+        .MuiSwitch-colorPrimary.Mui-checked + .MuiSwitch-track {
+          background-color: #2D9C5F !important;
+        }
+        
+        .MuiSwitch-colorSuccess.Mui-checked {
+          color: #2D9C5F !important;
+        }
+        
+        .MuiSwitch-colorSuccess.Mui-checked + .MuiSwitch-track {
+          background-color: #2D9C5F !important;
+        }
+
+        .MuiSwitch-colorInfo.Mui-checked {
+          color: #2D9C5F !important;
+        }
+        
+        .MuiSwitch-colorInfo.Mui-checked + .MuiSwitch-track {
+          background-color: #2D9C5F !important;
+        }
+
+        .MuiSwitch-colorError.Mui-checked {
+          color: #e57373 !important;
+        }
+        
+        .MuiSwitch-colorError.Mui-checked + .MuiSwitch-track {
+          background-color: #e57373 !important;
+        }
+      `}} />
     </div>
   )
 }
