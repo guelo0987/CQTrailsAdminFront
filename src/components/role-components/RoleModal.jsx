@@ -2,74 +2,79 @@
 
 import { useState, useEffect } from "react"
 import CloseIcon from "@mui/icons-material/Close"
-import "../user-components/UserModal.css" // Reutilizamos los estilos del UserModal
 
-const RoleModal = ({ user, roles, onSave, onClose }) => {
-  const [selectedRoleId, setSelectedRoleId] = useState("")
+const RoleModal = ({ role, onSave, onClose }) => {
+  const [formData, setFormData] = useState({
+    NombreRol: "",
+    Descripcion: ""
+  })
 
   useEffect(() => {
-    // Inicializar con el rol actual del usuario
-    if (user && user.IdRol) {
-      setSelectedRoleId(user.IdRol.toString())
+    if (role) {
+      setFormData({
+        NombreRol: role.NombreRol || "",
+        Descripcion: role.Descripcion || ""
+      })
     }
-  }, [user])
+  }, [role])
 
   const handleChange = (e) => {
-    setSelectedRoleId(e.target.value);
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave(parseInt(selectedRoleId, 10))
+    onSave(formData)
   }
 
-  // Verificar que hay roles disponibles
-  console.log("Roles disponibles en RoleModal:", roles);
-
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
+    <div className="modal-overlay">
+      <div className="modal-content role-modal">
         <div className="modal-header">
-          <h2 className="modal-title">Cambiar Rol de Usuario</h2>
-          <button className="modal-close" onClick={onClose}>
+          <h2>{role ? "Editar Rol" : "Nuevo Rol"}</h2>
+          <button className="close-button" onClick={onClose} aria-label="Cerrar">
             <CloseIcon />
           </button>
         </div>
+        
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <p>Selecciona un nuevo rol para <strong>{user?.Nombre} {user?.Apellido}</strong></p>
-            
-            <div className="form-group">
-              <label htmlFor="role">Rol:</label>
-              <select
-                id="role"
-                value={selectedRoleId}
-                onChange={handleChange}
-                className="role-select"
-              >
-                <option value="">Selecciona un rol</option>
-                {roles && roles.length > 0 ? (
-                  roles.map(role => (
-                    <option key={role.IdRol} value={String(role.IdRol)}>
-                      {role.NombreRol}
-                    </option>
-                  ))
-                ) : (
-                  <option value="" disabled>No hay roles disponibles</option>
-                )}
-              </select>
-            </div>
+          <div className="form-group">
+            <label htmlFor="NombreRol">Nombre del Rol</label>
+            <input
+              type="text"
+              id="NombreRol"
+              name="NombreRol"
+              value={formData.NombreRol}
+              onChange={handleChange}
+              className="form-control"
+              placeholder="Ingrese el nombre del rol"
+              required
+            />
           </div>
+          
+          <div className="form-group">
+            <label htmlFor="Descripcion">Descripción</label>
+            <textarea
+              id="Descripcion"
+              name="Descripcion"
+              value={formData.Descripcion}
+              onChange={handleChange}
+              className="form-control"
+              placeholder="Ingrese una descripción para el rol"
+              rows={4}
+            />
+          </div>
+          
           <div className="modal-footer">
-            <button type="button" className="modal-cancel" onClick={onClose}>
+            <button type="button" className="cancel-button" onClick={onClose}>
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              className="modal-submit"
-              disabled={!selectedRoleId}
-            >
-              Guardar Cambios
+            <button type="submit" className="save-button">
+              Guardar
             </button>
           </div>
         </form>

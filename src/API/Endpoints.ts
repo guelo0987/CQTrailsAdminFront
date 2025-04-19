@@ -48,6 +48,16 @@ export const endpoints = {
         removePermission: (roleId: number, permissionId: number) => `roles/${roleId}/permisos/${permissionId}`,
     },
 
+    rolespermisos: {
+        list: 'rolespermisos',
+        byRoleId: (id: number) => `rolespermisos/rol/${id}`,
+        byRoleName: (name: string) => `rolespermisos/rolname/${name}`,
+        create: 'rolespermisos',
+        getSpecific: (roleId: number, permissionId: number) => `rolespermisos/${roleId}/${permissionId}`,
+        update: (roleId: number, permissionId: number) => `rolespermisos/${roleId}/${permissionId}`,
+        delete: (roleId: number, permissionId: number) => `rolespermisos/${roleId}/${permissionId}`
+    },
+
     vehicles:{
         list: 'vehiculos',
         porId: (id: number) => `vehiculos/${id}`,
