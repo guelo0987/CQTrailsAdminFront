@@ -110,18 +110,28 @@ const VehicleManagement = () => {
   }, [])
 
   // Filtrar vehículos por búsqueda y filtros adicionales
+  // Filtrado de vehículos
   const filteredVehicles = vehicles.filter((vehicle) => {
-    // Filtro por término de búsqueda
-    const searchMatch =
-      (vehicle.placa && vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    // Filtro de búsqueda por texto
+    const searchMatch = !searchTerm || (
       (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (vehicle.placa && vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (vehicle.tipo && vehicle.tipo.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
 
     // Filtro por tipo de vehículo
     const typeMatch = typeFilter === "all" || (vehicle.tipo && vehicle.tipo === typeFilter)
 
     // Filtro por año
-    const yearMatch = yearFilter === "all" || (vehicle.anio && vehicle.anio.toString() === yearFilter)
+    let yearMatch = true
+    if (yearFilter !== "all") {
+      if (yearFilter === "8+") {
+        yearMatch = vehicle.anio && vehicle.anio >= 8
+      } else {
+        // Convertir a número para comparación
+        yearMatch = vehicle.anio && vehicle.anio === Number.parseInt(yearFilter, 10)
+      }
+    }
 
     // Filtro por capacidad
     let capacityMatch = true
@@ -129,15 +139,22 @@ const VehicleManagement = () => {
       if (capacityFilter === "8+") {
         capacityMatch = vehicle.capacidad && vehicle.capacidad >= 8
       } else {
+        // Convertir a número para comparación
         capacityMatch = vehicle.capacidad && vehicle.capacidad === Number.parseInt(capacityFilter, 10)
       }
     }
 
     // Filtro por rango de precio
-    const minPriceMatch = !minPriceFilter || (vehicle.precio && vehicle.precio >= Number.parseInt(minPriceFilter, 10))
-    const maxPriceMatch = !maxPriceFilter || (vehicle.precio && vehicle.precio <= Number.parseInt(maxPriceFilter, 10))
+    // Asegurarse de que los valores sean números para la comparación
+    const minPrice = minPriceFilter ? Number.parseFloat(minPriceFilter) : 0;
+    const maxPrice = maxPriceFilter ? Number.parseFloat(maxPriceFilter) : Infinity;
+    
+    // Verificar que el precio del vehículo esté dentro del rango especificado
+    const priceMatch = vehicle.precio !== undefined && 
+                      vehicle.precio >= minPrice && 
+                      vehicle.precio <= maxPrice;
 
-    return searchMatch && typeMatch && yearMatch && capacityMatch && minPriceMatch && maxPriceMatch
+    return searchMatch && typeMatch && yearMatch && capacityMatch && priceMatch;
   })
 
   // Paginación
