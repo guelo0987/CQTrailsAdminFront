@@ -73,15 +73,13 @@ const CityModal = ({ city, onSave, onClose }) => {
               {errors.Nombre && <span className="error-message">{errors.Nombre}</span>}
             </div>
 
-            {city && (
-              <div className="form-group">
-                <label htmlFor="Estado">Estado</label>
-                <select id="Estado" name="Estado" value={formData.Estado} onChange={handleChange}>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label htmlFor="Estado">Estado</label>
+              <select id="Estado" name="Estado" value={formData.Estado} onChange={handleChange}>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="modal-cancel" onClick={onClose}>

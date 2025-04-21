@@ -93,8 +93,8 @@ const CityManagement = () => {
       
       // Prepare city data for update
       const cityData = {
-        nombre: city.Nombre,
-        estado: city.Estado === "Activo" ? "Inactivo" : "Activo"
+        Nombre: city.Nombre,
+        Estado: city.Estado === "Activo" ? "Inactivo" : "Activo"
       }
       
       // Call API to update city
@@ -121,10 +121,10 @@ const CityManagement = () => {
     try {
       setLoading(true)
       
-      // Prepare city data for API
+      // Prepare city data for API - using capitalized field names to match API
       const apiCityData = {
-        nombre: cityData.Nombre,
-        estado: cityData.Estado || "Activo"
+        Nombre: cityData.Nombre,
+        Estado: cityData.Estado || "Activo"
       }
       
       if (currentCity) {
@@ -149,9 +149,9 @@ const CityManagement = () => {
         
         if (response.success && response.data) {
           const newCity = {
-            IdCiudad: response.data.idCiudad,
-            Nombre: response.data.nombre,
-            Estado: response.data.estado || "Activo"
+            IdCiudad: response.data.IdCiudad,
+            Nombre: response.data.Nombre,
+            Estado: response.data.Estado || "Activo"
           }
           
           setCities([...cities, newCity])

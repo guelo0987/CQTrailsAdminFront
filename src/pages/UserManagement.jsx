@@ -151,10 +151,10 @@ const UserManagement = () => {
     // Adaptar el formato del usuario al esperado por el modal
     const formattedUser = {
       idUsuario: user.IdUsuario,
-      email: user.Email,
-      nombre: user.Nombre,
-      apellido: user.Apellido,
-      idRol: user.IdRol
+      Email: user.Email,
+      Nombre: user.Nombre,
+      Apellido: user.Apellido,
+      IdRol: user.IdRol
     };
     setCurrentUser(formattedUser)
     setShowUserModal(true)

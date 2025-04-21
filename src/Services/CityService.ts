@@ -4,8 +4,8 @@ import { notificationService } from '../Utils/notificationService.ts';
 
 interface City {
     idCiudad?: number;
-    nombre: string;
-    estado?: string;
+    Nombre: string;
+    Estado?: string;
     // Add other city fields as needed
 }
 

@@ -4,10 +4,12 @@ import { notificationService } from '../Utils/notificationService.ts';
 
 interface User {
     idUsuario?: number;
-    nombre: string;
-    apellido: string;
-    email: string;
-    idRol?: number;
+    Nombre: string;
+    Apellido: string;
+    Email: string;
+    IdRol?: number;
+    Activo?: boolean;
+    Password?: string;
     // Add other user fields as needed
 }
 
@@ -134,10 +136,10 @@ class UserService {
         try {
             // Asegurarse de que los campos tengan el formato adecuado
             const userData = {
-                Nombre: user.nombre,
-                Apellido: user.apellido,
-                Email: user.email,
-                IdRol: user.idRol
+                Nombre: user.Nombre,
+                Apellido: user.Apellido,
+                Email: user.Email,
+                IdRol: user.IdRol
                 // No incluir campos sensibles como contraseña aquí
             };
 
@@ -185,7 +187,7 @@ class UserService {
             // Ajustar el formato de datos y método de acuerdo a la API
             // Primer intento: endpoint específico para cambiar rol
             const response = await axiosInstance.put(`${this.baseURL}${endpoints.users.changeRole(id)}`, {
-                idRol: roleId
+                IdRol: roleId
             });
             notificationService.showSuccess('Rol de usuario actualizado exitosamente');
             return response.data;

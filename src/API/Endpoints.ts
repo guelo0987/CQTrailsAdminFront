@@ -41,7 +41,7 @@ export const endpoints = {
     roles: {
         list: 'roles/',
         porId: (id: number) => `roles/${id}`,
-        create: 'roles',
+        create: 'roles/',
         update: (id: number) => `roles/${id}`,
         delete: (id: number) => `roles/${id}`,
         addPermission: (roleId: number, permissionId: number) => `roles/${roleId}/permisos/${permissionId}`,

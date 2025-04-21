@@ -6,31 +6,31 @@ import "../../../src/components/user-components/UserModal.css"
 
 const UserModal = ({ user, roles, onSave, onClose }) => {
   const [formData, setFormData] = useState({
-    email: "",
-    nombre: "",
-    apellido: "",
-    idRol: "",
-    password: "",
+    Email: "",
+    Nombre: "",
+    Apellido: "",
+    IdRol: "",
+    Password: "",
   })
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (user) {
       setFormData({
-        email: user.email || "",
-        nombre: user.nombre || "",
-        apellido: user.apellido || "",
-        idRol: user.idRol || "",
-        password: "", // No mostramos la contraseña actual
+        Email: user.Email || "",
+        Nombre: user.Nombre || "",
+        Apellido: user.Apellido || "",
+        IdRol: user.IdRol || "",
+        Password: "", // No mostramos la contraseña actual
       })
     } else {
       // Reset form para nuevo usuario
       setFormData({
-        email: "",
-        nombre: "",
-        apellido: "",
-        idRol: roles.length > 0 ? String(roles[0].IdRol) : "",
-        password: "",
+        Email: "",
+        Nombre: "",
+        Apellido: "",
+        IdRol: roles.length > 0 ? String(roles[0].IdRol) : "",
+        Password: "",
       })
     }
   }, [user, roles])
@@ -46,28 +46,28 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.email) {
-      newErrors.email = "El correo electrónico es requerido"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "El correo electrónico no es válido"
+    if (!formData.Email) {
+      newErrors.Email = "El correo electrónico es requerido"
+    } else if (!/\S+@\S+\.\S+/.test(formData.Email)) {
+      newErrors.Email = "El correo electrónico no es válido"
     }
 
-    if (!formData.nombre.trim()) {
-      newErrors.nombre = "El nombre es requerido"
+    if (!formData.Nombre.trim()) {
+      newErrors.Nombre = "El nombre es requerido"
     }
 
-    if (!formData.apellido.trim()) {
-      newErrors.apellido = "El apellido es requerido"
+    if (!formData.Apellido.trim()) {
+      newErrors.Apellido = "El apellido es requerido"
     }
 
-    if (!formData.idRol) {
-      newErrors.idRol = "Debe seleccionar un rol"
+    if (!formData.IdRol) {
+      newErrors.IdRol = "Debe seleccionar un rol"
     }
 
-    if (!user && !formData.password) {
-      newErrors.password = "La contraseña es requerida para nuevos usuarios"
-    } else if (formData.password && formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres"
+    if (!user && !formData.Password) {
+      newErrors.Password = "La contraseña es requerida para nuevos usuarios"
+    } else if (formData.Password && formData.Password.length < 6) {
+      newErrors.Password = "La contraseña debe tener al menos 6 caracteres"
     }
 
     setErrors(newErrors)
@@ -78,10 +78,11 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // Asegurar que idRol sea numérico al guardarlo
+      // Asegurar que IdRol sea numérico al guardarlo
       const dataToSave = {
         ...formData,
-        idRol: formData.idRol ? parseInt(formData.idRol, 10) : null
+        IdRol: formData.IdRol ? parseInt(formData.IdRol, 10) : null,
+        Activo: true // Por defecto, los usuarios nuevos son activos
       };
       onSave(dataToSave)
     }
@@ -102,50 +103,50 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="form-group">
-              <label htmlFor="email">Correo Electrónico</label>
+              <label htmlFor="Email">Correo Electrónico</label>
               <input
-                id="email"
-                name="email"
+                id="Email"
+                name="Email"
                 type="email"
-                value={formData.email}
+                value={formData.Email}
                 onChange={handleChange}
                 placeholder="ejemplo@cqtrails.com"
               />
-              {errors.email && <span className="error-message">{errors.email}</span>}
+              {errors.Email && <span className="error-message">{errors.Email}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="nombre">Nombre</label>
+              <label htmlFor="Nombre">Nombre</label>
               <input
-                id="nombre"
-                name="nombre"
+                id="Nombre"
+                name="Nombre"
                 type="text"
-                value={formData.nombre}
+                value={formData.Nombre}
                 onChange={handleChange}
                 placeholder="Nombre del usuario"
               />
-              {errors.nombre && <span className="error-message">{errors.nombre}</span>}
+              {errors.Nombre && <span className="error-message">{errors.Nombre}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="apellido">Apellido</label>
+              <label htmlFor="Apellido">Apellido</label>
               <input
-                id="apellido"
-                name="apellido"
+                id="Apellido"
+                name="Apellido"
                 type="text"
-                value={formData.apellido}
+                value={formData.Apellido}
                 onChange={handleChange}
                 placeholder="Apellido del usuario"
               />
-              {errors.apellido && <span className="error-message">{errors.apellido}</span>}
+              {errors.Apellido && <span className="error-message">{errors.Apellido}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="idRol">Rol</label>
+              <label htmlFor="IdRol">Rol</label>
               <select 
-                id="idRol" 
-                name="idRol" 
-                value={formData.idRol} 
+                id="IdRol" 
+                name="IdRol" 
+                value={formData.IdRol} 
                 onChange={handleChange}
               >
                 <option value="">Seleccione un rol</option>
@@ -159,22 +160,22 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
                   <option value="" disabled>No hay roles disponibles</option>
                 )}
               </select>
-              {errors.idRol && <span className="error-message">{errors.idRol}</span>}
+              {errors.IdRol && <span className="error-message">{errors.IdRol}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">
+              <label htmlFor="Password">
                 {user ? "Contraseña (dejar en blanco para mantener la actual)" : "Contraseña"}
               </label>
               <input
-                id="password"
-                name="password"
+                id="Password"
+                name="Password"
                 type="password"
-                value={formData.password}
+                value={formData.Password}
                 onChange={handleChange}
                 placeholder={user ? "Nueva contraseña (opcional)" : "Contraseña"}
               />
-              {errors.password && <span className="error-message">{errors.password}</span>}
+              {errors.Password && <span className="error-message">{errors.Password}</span>}
             </div>
           </div>
           <div className="modal-footer">
