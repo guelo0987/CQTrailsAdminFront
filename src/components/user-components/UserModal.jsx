@@ -88,7 +88,7 @@ const UserModal = ({ user, roles, onSave, onClose }) => {
   }
 
   // Verificar que hay roles disponibles
-  console.log("Roles disponibles:", roles);
+  
 
   return (
     <div className="modal-backdrop">

@@ -1,4 +1,4 @@
-export const API_BASE_URL = (import.meta as any).env?.API_URL || 'http://localhost:8000/';
+export const API_BASE_URL = (import.meta as any).env?.API_URL || 'https://cqtrailsadmincore-production.up.railway.app/';
 
 
 export const endpoints = {
@@ -8,7 +8,7 @@ export const endpoints = {
     },
 
     empresa:{
-        list: 'empresas',
+        list: 'empresas/',
        porId: (id: number) => `empresas/${id}`,
        crear: 'empresas',
        actualizar: (id: number) => `empresas/${id}`,
@@ -16,9 +16,9 @@ export const endpoints = {
     },
 
     ciudades:{
-        list: 'ciudades',
+        list: 'ciudades/',
         porId: (id: number) => `ciudades/${id}`,
-        crear: 'ciudades',
+        crear: 'ciudades/',
         actualizar: (id: number) => `ciudades/${id}`,
         eliminar: (id: number) => `ciudades/${id}`
     },
@@ -27,8 +27,8 @@ export const endpoints = {
         list: 'usuarios/clientes',
         porId: (id: number) => `usuarios/${id}`,
         // New endpoints based on the FastAPI router
-        allUsers: 'usuarios',
-        create: 'usuarios',
+        allUsers: 'usuarios/',
+        create: 'usuarios/',
         update: (id: number) => `usuarios/${id}`,
         delete: (id: number) => `usuarios/${id}`,
         changeRole: (id: number) => `usuarios/${id}/rol`,
@@ -39,7 +39,7 @@ export const endpoints = {
     },
 
     roles: {
-        list: 'roles',
+        list: 'roles/',
         porId: (id: number) => `roles/${id}`,
         create: 'roles',
         update: (id: number) => `roles/${id}`,
@@ -59,17 +59,17 @@ export const endpoints = {
     },
 
     vehicles:{
-        list: 'vehiculos',
+        list: 'vehiculos/',
         porId: (id: number) => `vehiculos/${id}`,
         typeCount: 'vehiculos/tipos/count',
-        crear: 'vehiculos',
+        crear: 'vehiculos/',
         actualizar: (id: number) => `vehiculos/${id}`,
         eliminar: (id: number) => `vehiculos/${id}`,
         updateDisponibilidad: (id: number) => `vehiculos/${id}/disponibilidad`
     },
 
     reservations:{
-        list: 'reservaciones',
+        list: 'reservaciones/',
         porId: (id: number) => `reservaciones/${id}`,
         dashboard: 'reservaciones/estadisticas/dashboard',
         weeklyReservations: 'reservaciones/estadisticas/reservaciones-semana-actual',

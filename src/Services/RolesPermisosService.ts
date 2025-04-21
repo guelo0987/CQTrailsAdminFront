@@ -71,7 +71,7 @@ class RolesPermisosService {
             }
             
             const queryString = queryParams.toString();
-            const url = `${this.baseURL}${endpoints.rolespermisos.list}${queryString ? `?${queryString}` : ''}`;
+            const url = `${this.baseURL}${endpoints.rolespermisos.list}/${queryString ? `?${queryString}` : ''}`;
             
             const response = await axiosInstance.get(url);
             return response.data;

@@ -221,23 +221,23 @@ const UserManagement = () => {
 
   const handleSaveUser = async (userData) => {
     try {
-      // Adaptar el formato de los datos al esperado por el backend
+      // The API expects capitalized property names
       const apiUserData = {
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        email: userData.email,
-        idRol: parseInt(userData.idRol, 10), // Asegurar que sea número
-        // Solo incluir contraseña si se ha proporcionado una nueva
-        ...(userData.password && { password: userData.password })
+        Email: userData.Email,
+        Nombre: userData.Nombre,
+        Apellido: userData.Apellido,
+        IdRol: userData.IdRol,
+        Activo: userData.Activo,
+        Password: userData.Password
       };
 
       console.log("Enviando datos de usuario:", apiUserData);
 
       if (currentUser) {
-        // Update existing user - usar el formato de datos adaptado
+        // Update existing user
         await userService.updateUser(currentUser.idUsuario, apiUserData)
       } else {
-        // Create new user - usar el formato de datos adaptado
+        // Create new user
         await userService.createUser(apiUserData)
       }
       
