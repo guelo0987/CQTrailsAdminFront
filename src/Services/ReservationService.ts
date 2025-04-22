@@ -248,7 +248,7 @@ class ReservationService {
                 `${this.baseURL}${endpoints.reservations.approve(id)}`, 
                 approvalData
             );
-            notificationService.showSuccess('Reservación aprobada exitosamente');
+            notificationService.showSuccess('Reservación Aceptada exitosamente');
             return response.data;
         } catch (error) {
             console.error(`Error approving reservation with ID ${id}:`, error);
@@ -318,7 +318,7 @@ class ReservationService {
 
     /**
      * Get reservations by status
-     * @param status Reservation status (Pendiente, Aprobada, Denegada)
+     * @param status Reservation status (Pendiente, Aceptada, Denegada)
      * @param params Additional query parameters
      * @returns Promise with filtered reservations
      */

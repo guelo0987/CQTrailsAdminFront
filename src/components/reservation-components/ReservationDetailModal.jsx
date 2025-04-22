@@ -23,7 +23,7 @@ const ReservationDetailModal = ({ reservation, onClose, formatDate }) => {
   // Helper function to get status class
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
-      case "aprobada":
+      case "Aceptada":
         return "status-completed"
       case "pendiente":
         return "status-pending"
@@ -285,8 +285,8 @@ const ReservationDetailModal = ({ reservation, onClose, formatDate }) => {
               
               <div className="payment-status">
                 <div className="payment-status-label">Estado de Pago:</div>
-                <div className={`payment-status-value ${reservation.Estado === "Aprobada" ? "paid" : "pending"}`}>
-                  {reservation.Estado === "Aprobada" ? "Pagado" : "Pendiente"}
+                <div className={`payment-status-value ${reservation.Estado === "Aceptada" ? "paid" : "pending"}`}>
+                  {reservation.Estado === "Aceptada" ? "Pagado" : "Pendiente"}
                 </div>
               </div>
             </div>

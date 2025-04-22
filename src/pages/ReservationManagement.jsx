@@ -162,7 +162,7 @@ const ReservationManagement = () => {
   // Get status class for styling
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
-      case "aprobada":
+      case "Aceptada":
         return "status-completed"
       case "pendiente":
         return "status-pending"
@@ -291,7 +291,7 @@ const ReservationManagement = () => {
             >
               <option value="all">Todos</option>
               <option value="pendiente">Pendiente</option>
-              <option value="aprobada">Aprobada</option>
+              <option value="Aceptada">Aceptada</option>
               <option value="denegada">Denegada</option>
             </select>
           </div>

@@ -54,16 +54,16 @@ const ReservationStatusModal = ({ reservation, onSave, onClose }) => {
                   <span>Pendiente</span>
                 </label>
 
-                <label className={`status-option ${selectedStatus === "Aprobada" ? "selected" : ""}`}>
+                <label className={`status-option ${selectedStatus === "Aceptada" ? "selected" : ""}`}>
                   <input
                     type="radio"
                     name="status"
-                    value="Aprobada"
-                    checked={selectedStatus === "Aprobada"}
-                    onChange={() => setSelectedStatus("Aprobada")}
+                    value="Aceptada"
+                    checked={selectedStatus === "Aceptada"}
+                    onChange={() => setSelectedStatus("Aceptada")}
                   />
                   <CheckCircleIcon />
-                  <span>Aprobada</span>
+                  <span>Aceptada</span>
                 </label>
 
                 <label className={`status-option ${selectedStatus === "Denegada" ? "selected" : ""}`}>
