@@ -275,27 +275,30 @@ const VehicleManagement = () => {
           // Si hay nuevas imágenes y el backend devuelve URLs
           if (isEditingImages && response.data.Image_url) {
             // Mapear las nuevas URLs a sus posiciones correspondientes
-            const newUrlsMap = {};
+            let newImageUrls = [];
             
             if (response.data.Image_url.image1) {
-              newUrlsMap[0] = response.data.Image_url.image1;
+              newImageUrls.push(response.data.Image_url.image1);
             }
             
             if (response.data.Image_url.image2) {
-              newUrlsMap[1] = response.data.Image_url.image2;
+              newImageUrls.push(response.data.Image_url.image2);
             }
             
             if (response.data.Image_url.image3) {
-              newUrlsMap[2] = response.data.Image_url.image3;
+              newImageUrls.push(response.data.Image_url.image3);
             }
             
-            // Actualizar solo las posiciones de las imágenes que fueron subidas
+            console.log("New image URLs from response:", newImageUrls);
+            console.log("Image files to map:", imageFiles);
+            
+            // Actualizar las URL en las posiciones correctas
             imageFiles.forEach((imgFile, idx) => {
               const originalIndex = imgFile.index;
               
-              if (newUrlsMap[idx] && originalIndex !== undefined) {
-                // Solo actualizamos la URL si realmente hay una nueva
-                processedImages[originalIndex].url = newUrlsMap[idx];
+              if (idx < newImageUrls.length && originalIndex !== undefined) {
+                console.log(`Updating image at index ${originalIndex} with URL ${newImageUrls[idx]}`);
+                processedImages[originalIndex].url = newImageUrls[idx];
               }
             });
           }
