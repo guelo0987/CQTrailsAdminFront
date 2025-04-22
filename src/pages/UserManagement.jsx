@@ -235,19 +235,25 @@ const UserManagement = () => {
 
       if (currentUser) {
         // Update existing user
-        await userService.updateUser(currentUser.idUsuario, apiUserData)
+        await userService.updateUser(currentUser.idUsuario, apiUserData);
+        
+        // If a password was provided, update it separately with the dedicated endpoint
+        if (userData.Password && userData.Password.trim() !== '') {
+          console.log("Cambiando contraseña del usuario", currentUser.idUsuario);
+          await userService.changeUserPassword(currentUser.idUsuario, userData.Password);
+        }
       } else {
         // Create new user
-        await userService.createUser(apiUserData)
+        await userService.createUser(apiUserData);
       }
       
       // Actualizar la lista de usuarios
       await refreshUserList();
       
-      setShowUserModal(false)
+      setShowUserModal(false);
     } catch (error) {
-      console.error("Error saving user:", error)
-      notificationService.showError(error.response?.data?.message || "Error al guardar el usuario")
+      console.error("Error saving user:", error);
+      notificationService.showError(error.response?.data?.message || "Error al guardar el usuario");
     }
   }
 

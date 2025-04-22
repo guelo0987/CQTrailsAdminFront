@@ -286,11 +286,11 @@ class UserService {
     async changeUserPassword(id: number, newPassword: string, currentPassword?: string) {
         try {
             const payload = {
-                nuevaPassword: newPassword
+                nueva_password: newPassword
             };
             
             if (currentPassword) {
-                Object.assign(payload, { passwordActual: currentPassword });
+                Object.assign(payload, { password_actual: currentPassword });
             }
             
             const response = await axiosInstance.patch(`${this.baseURL}${endpoints.users.changePassword(id)}`, payload);

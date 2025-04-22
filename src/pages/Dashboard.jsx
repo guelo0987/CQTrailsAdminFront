@@ -449,7 +449,7 @@ const Dashboard = () => {
         <div className="recent-reservations">
           <div className="section-header">
             <h2 className="section-title">Últimas Reservaciones</h2>
-            <button className="view-all-button">Ver todas</button>
+            <button onClick={() => window.location.href = '/reservations'} className="view-all-button">Ver todas</button>
           </div>
 
           {loading ? (
