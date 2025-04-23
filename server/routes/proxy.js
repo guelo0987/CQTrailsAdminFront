@@ -80,7 +80,7 @@ router.get('/proxy-image', async (req, res) => {
       return res.send(response.data);
     }
   } catch (error) {
-    console.error('Error en el proxy de imágenes:', error.message);
+    
     return res.status(500).send('Error al obtener la imagen');
   }
 });
