@@ -129,13 +129,11 @@ const ImageWithFallback = ({ url, alt, vehicleId, imageIndex }) => {
         }
         
         if (newSrc) {
-          
           setImgSrc(newSrc);
           setUseIframe(false);
         }
       } else {
         // No se pudo extraer ID
-        console.error(`No se pudo extraer el ID de Google Drive de la URL: ${url}`);
         setImgSrc(url); // Intentar con la URL original
       }
     } else if (url.startsWith('http')) {
@@ -148,8 +146,6 @@ const ImageWithFallback = ({ url, alt, vehicleId, imageIndex }) => {
   }, [url, errorCount, vehicleId, imageIndex]);
   
   const handleImageError = () => {
-    console.error(`[Vehículo ${vehicleId}, Imagen ${imageIndex}] Error cargando imagen: ${imgSrc}`);
-    
     // Si ya probamos todas las opciones, no incrementamos más
     if (errorCount < 5) {
       setErrorCount(prev => prev + 1);
@@ -181,4 +177,4 @@ const ImageWithFallback = ({ url, alt, vehicleId, imageIndex }) => {
   );
 };
 
-export default ImageWithFallback; 
+export default ImageWithFallback;
