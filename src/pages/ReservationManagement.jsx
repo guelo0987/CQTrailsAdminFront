@@ -13,6 +13,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn"
 import { reservationService } from "../Services/ReservationService"
 import { notificationService } from "../Utils/notificationService"
 import "./ReservationManagement.css"
+import { notificationService as notificationAPI } from "../Services/NotificationService.ts"
 
 const ReservationManagement = () => {
   const [reservations, setReservations] = useState([])
@@ -130,6 +131,28 @@ const ReservationManagement = () => {
         newStatus, 
         motivoRechazo
       );
+      
+      // If the status is "Aceptada", create a notification and send confirmation email
+      if (newStatus.toLowerCase() === "aceptada") {
+        try {
+          // Create notification
+          const notificationData = {
+            IdReservacion: currentReservation.IdReservacion,
+            TipoNotificacion: "Reservación Aceptada",
+            Contenido: `La reservación #${currentReservation.IdReservacion} ha sido aceptada.`
+          };
+          
+          await notificationAPI.createNotification(notificationData);
+          
+          // Send confirmation email
+          await notificationAPI.sendConfirmationEmail(currentReservation.IdReservacion);
+          
+          notificationService.showSuccess("Se ha enviado una notificación de confirmación al cliente");
+        } catch (notificationError) {
+          console.error("Error al crear la notificación o enviar el correo:", notificationError);
+          // Continue with the flow even if notification or email fails
+        }
+      }
       
       // Refresh reservations list
       const response = await reservationService.getReservations()

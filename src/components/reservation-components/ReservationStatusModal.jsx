@@ -80,6 +80,14 @@ const ReservationStatusModal = ({ reservation, onSave, onClose }) => {
               </div>
             </div>
 
+            {selectedStatus === "Aceptada" && (
+              <div className="notification-info" style={{ marginTop: "10px", padding: "10px", backgroundColor: "#e8f5e9", borderRadius: "4px", fontSize: "14px", color: "#2e7d32" }}>
+                <p>
+                  Al aceptar esta reservación, se enviará una notificación automática y un correo electrónico de confirmación al cliente.
+                </p>
+              </div>
+            )}
+
             {selectedStatus === "Denegada" && (
               <div className="form-group">
                 <label htmlFor="motivoRechazo">Motivo de Rechazo</label>

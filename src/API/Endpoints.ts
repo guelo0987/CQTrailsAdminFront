@@ -94,4 +94,14 @@ export const endpoints = {
         // Updated endpoint for changing reservation status
         changeStatus: (id: number) => `reservaciones/${id}/cambiar-estado`
     },
+
+    notifications: {
+        list: 'notificaciones/',
+        getById: (id: number) => `notificaciones/${id}`,
+        create: 'notificaciones/',
+        update: (id: number) => `notificaciones/${id}`,
+        delete: (id: number) => `notificaciones/${id}`,
+        markAsRead: (id: number) => `notificaciones/${id}/marcar-leida`,
+        sendConfirmation: (reservationId: number) => `notificaciones/${reservationId}/enviar-confirmacion`
+    },
 }
