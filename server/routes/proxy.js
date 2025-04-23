@@ -49,7 +49,7 @@ router.get('/proxy-image', async (req, res) => {
           }
         } catch (e) {
           error = e;
-          console.log(`Error al obtener imagen con URL ${testUrl}:`, e.message);
+          
           continue;
         }
       }
