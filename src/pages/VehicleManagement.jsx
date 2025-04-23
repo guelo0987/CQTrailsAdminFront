@@ -229,8 +229,7 @@ const VehicleManagement = () => {
           position: index
         }));
       
-      console.log("Image files to upload:", imageFiles); // Debug log
-      console.log("Images to remove:", imagesToRemove); // Debug log
+     
       
       // Prepare vehicle data for the API using the correct field names
       const apiVehicleData = {
